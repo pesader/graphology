@@ -31,7 +31,7 @@ fields = 'eid doi pii pubmed_id title subtype subtypeDescription ' \
          'issueIdentifier article_number pageRange description '\
          'authkeywords citedby_count openaccess freetoread '\
          'freetoreadLabel fund_acr fund_no fund_sponsor'
-Document = namedtuple('Document', fields)
+ScopusSearchResult = namedtuple('ScopusSearchResult', fields)
 
 for year in range(START_YEAR, END_YEAR + 1):
     query = f"AF-ID({UNICAMP_AFFILIATION_ID}) AND PUBYEAR = {year}"
@@ -43,7 +43,7 @@ for year in range(START_YEAR, END_YEAR + 1):
 
     if search.results:
         for result in search.results:
-            result = Document(result)
+            result = ScopusSearchResult(result)
             eid = result.eid
             documents.append({
                 "title": result.title,

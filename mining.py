@@ -7,16 +7,18 @@ init()
 
 timestamp = datetime.now().isoformat(timespec='seconds').replace(":", "-")
 
+# Search parameters
+UNICAMP_AFFILIATION_ID = '60029570'
+END_YEAR = 2025
+START_YEAR = 2020
+
+# Directory structure
 DATA_DIRECTORY: Path = Path("data")
 RESULTS_DIRECTORY: Path = DATA_DIRECTORY / Path(timestamp)
 
 # Ensure results directory exists
 RESULTS_DIRECTORY.mkdir(parents=True, exist_ok=True)
 
-UNICAMP_AFFILIATION_ID = '60029570'
-
-END_YEAR = 2025
-START_YEAR = 2020
 
 for year in range(START_YEAR, END_YEAR + 1):
     query = f"AF-ID({UNICAMP_AFFILIATION_ID}) AND PUBYEAR = {year}"

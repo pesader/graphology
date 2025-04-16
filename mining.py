@@ -1,97 +1,147 @@
-from pybliometrics.scopus import ScopusSearch, AbstractRetrieval, init
+from pathlib import Path
+import pandas as pd
+from datetime import datetime
+from pybliometrics.scopus import ScopusSearch, init
 
 init()
 
+timestamp = datetime.now().isoformat(timespec='seconds').replace(":", "-")
+
+DATA_DIRECTORY: Path = Path("data")
+RESULTS_DIRECTORY: Path = DATA_DIRECTORY / Path(timestamp)
+
+# Ensure results directory exists
+RESULTS_DIRECTORY.mkdir(parents=True, exist_ok=True)
+
+documents_path = RESULTS_DIRECTORY / Path("documents.tsv")
+authorships_path = RESULTS_DIRECTORY / Path("authorships.tsv")
+affiliations_path = RESULTS_DIRECTORY / Path("affiliations.tsv")
+
+# Initialize files with headers
+def init_tsv(filename, fieldnames):
+    pd.DataFrame(columns=fieldnames).to_csv(filename, sep="\t", index=False)
+
+init_tsv(documents_path, [
+    "title",
+    "eid",
+    "doi",
+    "openaccess",
+    "date",
+    "document_type",
+    "document_type_description",
+    "first_author",
+    "volume",
+    "issue",
+    "page",
+    "citedby_count",
+    "funding_acronym",
+    "funding_number",
+    "funding_name",
+    "source_name",
+    "source_type",
+    "source_id",
+    "source_issn",
+    "source_eissn",
+])
+init_tsv(authorships_path, ["eid", "author_id", "author_name", "affiliations"])
+init_tsv(affiliations_path, ["id", "name", "city", "country"])
+
 UNICAMP_AFFILIATION_ID = '60029570'
-start_year = 2025
 
-# Query for articles from 2020 onward with authors from the given institution
-query = f"AF-ID({UNICAMP_AFFILIATION_ID}) AND PUBYEAR > {start_year - 1}"
+END_YEAR = 2025
+START_YEAR = 2025
 
-# Fetch results with pagination
-search = ScopusSearch(query, subscriber=True)
+for year in range(START_YEAR, END_YEAR + 1):
+    query = f"AF-ID({UNICAMP_AFFILIATION_ID}) AND PUBYEAR > {year - 1} AND PUBYEAR < {year + 1}"
+    search = ScopusSearch(query, subscriber=True)
 
-# Iterate over each article
-for result in search.results:
-    print(result)
+    # Deduplication store for affiliations
+    affiliations = {}
 
-    # Document information
-    title = result.title
-    eid = result.eid
-    doi = result.doi
-    openaccess = result.openaccess
-    date = result.coverDate
-    document_type = result.subtype
-    document_type_description = result.subtypeDescription
-    first_author = result.creator
+    def append_row(filename, row, fieldnames):
+        df = pd.DataFrame([row], columns=fieldnames)
+        df.to_csv(filename, sep="\t", index=False, header=False, mode="a")
 
-    # Funding
-    funding_acronym = result.fund_acr
-    funding_number = result.fund_no
-    funding_name = result.fund_sponsor
+    for result in search.results:
+        # Document info
+        title = result.title
+        eid = result.eid
+        doi = result.doi
+        openaccess = result.openaccess
+        date = result.coverDate
+        document_type = result.subtype
+        document_type_description = result.subtypeDescription
+        first_author = result.creator
+        volume = result.volume
+        issue = result.issueIdentifier
+        page = result.pageRange
+        citedby_count = result.citedby_count
+        funding_acronym = result.fund_acr
+        funding_number = result.fund_no
+        funding_name = result.fund_sponsor
+        source_name = result.publicationName
+        source_type = result.aggregationType
+        source_id = result.source_id
+        source_issn = result.issn
+        source_eissn = result.eIssn
 
-    # Source (Journal, Magazine, etc)
-    source_name = result.publicationName
-    source_type = result.aggregationType
-    source_id = result.source_id
-    source_issn = result.issn
-    source_eissn = result.eIssn
+        append_row(documents_path, {
+            "title": title,
+            "eid": eid,
+            "doi": doi,
+            "openaccess": openaccess,
+            "date": date,
+            "document_type": document_type,
+            "document_type_description": document_type_description,
+            "first_author": first_author,
+            "volume": volume,
+            "issue": issue,
+            "page": page,
+            "citedby_count": citedby_count,
+            "funding_acronym": funding_acronym,
+            "funding_number": funding_number,
+            "funding_name": funding_name,
+            "source_name": source_name,
+            "source_type": source_type,
+            "source_id": source_id,
+            "source_issn": source_issn,
+            "source_eissn": source_eissn
+        }, fieldnames=pd.read_csv(documents_path, sep="\t", nrows=0).columns)
 
-    # Volume, issue, pages
-    volume = result.volume
-    issue = result.issueIdentifier
-    page = result.pageRange
+        # Affiliations
+        if result.afid:
+            afids = result.afid.split(";")
+            affilnames = result.affilname.split(";")
+            cities = result.affiliation_city.split(";")
+            countries = result.affiliation_country.split(";")
+            for i in range(len(afids)):
+                affiliations[afids[i]] = {
+                    "id": afids[i],
+                    "name": affilnames[i],
+                    "city": cities[i],
+                    "country": countries[i]
+                }
 
-    # Citations count
-    citedby_count = result.citedby_count
+        # Authors
+        if result.author_ids:
+            author_ids = result.author_ids.split(";")
+            author_names = result.author_names.split(";")
+            author_afids = result.author_afids.split(";")
+            for i in range(len(author_ids)):
+                affils = author_afids[i].split("-")
+                append_row(authorships_path, {
+                    "eid": eid,
+                    "author_id": author_ids[i],
+                    "author_name": author_names[i],
+                    "affiliations": ",".join(affils)
+                }, fieldnames=pd.read_csv(authorships_path, sep="\t", nrows=0).columns)
 
-    # Retrieve full article metadata
-    abstract = AbstractRetrieval(eid, view="FULL")
-    language = abstract.language
-    areas = abstract.subject_areas
+    # Write deduplicated affiliations at once
+    for affiliation in affiliations.values():
+        append_row(
+            affiliations_path,
+            affiliation,
+            fieldnames=pd.read_csv(affiliations_path, sep="\t", nrows=0).columns
+        )
 
-    # Conference
-    conference_code = abstract.confcode
-    conference_date = abstract.confdate
-    conference_location = abstract.conflocation
-    conference_name = abstract.confname
-    conference_sponsors = abstract.confsponsor
-
-    # Redundancy
-    page_start = abstract.startingPage
-    page_end = abstract.endingPage
-
-    # Keywords
-    author_keywords = result.authkeywords
-    indexed_keywords = abstract.idxterms
-
-    # Authors
-    for author in abstract.authorgroup:
-        author_affiliation_id = author.affiliation_id
-        author_collaboration_id = author.collaboration_id
-        author_department_id = author.dptid
-        author_organization = author.organization
-        author_id = author.auid
-        author_name = author.indexed_name
-        author_given_name = author.given_name
-        author_surname = author.surname
-        author_country = author.country
-        print(f"Author: Name={author_name} ID={author_id} Affiliation={author_affiliation_id} Department={author_department_id} Country={author_country}")
-
-    # Collaborators
-    if abstract.contributor_group:
-        for contributor in abstract.contributor_group:
-            contributor_name= contributor.indexed_name
-            contributor_given_name= contributor.given_name
-            contributor_surname= contributor.surname
-            contributor_role = contributor.role
-            print(f"Contributor: Name={contributor_name} Role={contributor_role}")
-
-    print('-' * 40)
-
-# Entities
-#   - Document
-#   - Author
-#   - Source
-#   - Conference
-#   - Funding agency
+    print(f"{year} done!")

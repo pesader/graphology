@@ -43,7 +43,7 @@ for year in range(START_YEAR, END_YEAR + 1):
 
     if search.results:
         for result in search.results:
-            result = ScopusSearchResult(result)
+            result = ScopusSearchResult(*result)
             eid = result.eid
             documents.append({
                 "title": result.title,

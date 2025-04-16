@@ -33,7 +33,7 @@ fields = 'eid doi pii pubmed_id title subtype subtypeDescription ' \
          'freetoreadLabel fund_acr fund_no fund_sponsor'
 ScopusSearchResult = namedtuple('ScopusSearchResult', fields)
 
-for year in range(START_YEAR, END_YEAR + 1):
+for year in range(END_YEAR, START_YEAR - 1, -1):
     query = f"AF-ID({UNICAMP_AFFILIATION_ID}) AND PUBYEAR = {year}"
     search = ScopusSearch(query, subscriber=True)
 

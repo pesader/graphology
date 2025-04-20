@@ -15,7 +15,7 @@ START_YEAR = 2020
 
 # Directory structure
 DATA_DIRECTORY: Path = Path("data")
-RESULTS_DIRECTORY: Path = DATA_DIRECTORY / Path(timestamp)
+RESULTS_DIRECTORY: Path = DATA_DIRECTORY / Path(timestamp) / Path("raw")
 
 # Ensure results directory exists
 RESULTS_DIRECTORY.mkdir(parents=True, exist_ok=True)

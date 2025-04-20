@@ -79,7 +79,7 @@ for year in range(END_YEAR, START_YEAR - 1, -1):
                 countries = result.affiliation_country.split(";")
                 for i in range(len(afids)):
                     affiliations[afids[i]] = {
-                        "id": afids[i],
+                        "affiliation_id": afids[i],
                         "name": names[i],
                         "city": cities[i],
                         "country": countries[i],

@@ -15,7 +15,6 @@ for prefix in TABLE_PREFIXES:
     df = pd.concat((pd.read_csv(f, sep='\t', dtype=str) for f in tsv_files), ignore_index=True)
 
     if prefix == "authorships":
-        # Split and explode affiliations
         df['affiliations'] = df['affiliations'].str.split(',')
         df = df.explode('affiliations').reset_index(drop=True)
 

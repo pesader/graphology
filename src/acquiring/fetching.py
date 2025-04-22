@@ -1,3 +1,5 @@
+import pickle
+
 from collections import namedtuple
 from pathlib import Path
 import pandas as pd
@@ -16,9 +18,11 @@ START_YEAR = 2020
 # Directory structure
 DATA_DIRECTORY: Path = Path("data")
 RESULTS_DIRECTORY: Path = DATA_DIRECTORY / Path(timestamp) / Path("raw")
+PICKLES_DIRECTORY: Path = DATA_DIRECTORY / Path(timestamp) / Path("pickles")
 
-# Ensure results directory exists
+# Ensure directories exists
 RESULTS_DIRECTORY.mkdir(parents=True, exist_ok=True)
+PICKLES_DIRECTORY.mkdir(parents=True, exist_ok=True)
 
 # Taken from pybliometrics.scopus.scopus_search
 # The following code snippet is licensed under the MIT License.
@@ -44,8 +48,12 @@ for year in range(END_YEAR, START_YEAR - 1, -1):
     affiliations = {}
 
     if search.results:
-        for result in search.results:
-            result = ScopusSearchResult(*result)
+        results = [ScopusSearchResult(*result) for result in search.results]
+
+        with open(PICKLES_DIRECTORY / Path(f"results_{year}.pkl"), "wb") as f:
+            pickle.dump(results, f)
+
+        for result in results:
             eid = result.eid
             documents.append(
                 {

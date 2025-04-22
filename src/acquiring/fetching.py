@@ -101,11 +101,17 @@ for year in range(END_YEAR, START_YEAR - 1, -1):
                     )
 
         pd.DataFrame(documents).to_csv(
-            RESULTS_DIRECTORY / Path(f"documents_{year}.tsv"), sep="\t", index=False
+            RESULTS_DIRECTORY / Path(f"documents_{year}.tsv"),
+            sep="\t",
+            index=False,
         )
         pd.DataFrame(authorships).to_csv(
-            RESULTS_DIRECTORY / Path(f"authorships_{year}.tsv"), sep="\t", index=False
+            RESULTS_DIRECTORY / Path(f"authorships_{year}.tsv"),
+            sep="\t",
+            index=False,
         )
         pd.DataFrame(affiliations.values()).to_csv(
-            RESULTS_DIRECTORY / Path(f"affiliations_{year}.tsv"), sep="\t", index=False
+            RESULTS_DIRECTORY / Path(f"affiliations_{year}.tsv"),
+            sep="\t",
+            index=False,
         )

@@ -96,6 +96,7 @@ for year in range(END_YEAR, START_YEAR - 1, -1):
                             "author_id": ids[i],
                             "author_name": names[i],
                             "affiliations": ",".join(afids[i].split("-")),
+                            "first_author": True if i == 0 else False,
                         }
                     )
 

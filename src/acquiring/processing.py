@@ -19,7 +19,7 @@ for prefix in TABLE_PREFIXES:
     )
 
     if prefix == "authorships":
-        df["affiliations"] = df["affiliations"].str.split(",")
+        df["affiliation"] = df["affiliations"].str.split(",")
         df = df.explode("affiliations").reset_index(drop=True)
 
     # Save to a single merged file

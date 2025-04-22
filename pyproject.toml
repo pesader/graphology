@@ -1,0 +1,27 @@
+[project]
+name = "graphology"
+version = "0.1.0"
+description = "An analysis of scientific collaboration using graphs"
+authors = [
+    {name = "Pedro Sader Azevedo",email = "pedro.saderazevedo@lnbr.cnpem.br"}
+]
+license = {text = "GPL-3.0"}
+readme = "README.md"
+requires-python = ">=3.12,<=3.13"
+dependencies = [
+    "sqlmodel (>=0.0.24,<0.0.25)",
+    "keyring (>=25.6.0,<26.0.0)",
+    "pybliometrics (>=4.2.1,<5.0.0)",
+    "pandas (>=2.2.3,<3.0.0)",
+    "sqlalchemy (>=2.0.40,<3.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.group.dev.dependencies]
+black = "^25.1.0"
+isort = "^6.0.1"
+

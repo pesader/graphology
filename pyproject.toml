@@ -13,7 +13,8 @@ dependencies = [
     "keyring (>=25.6.0,<26.0.0)",
     "pybliometrics (>=4.2.1,<5.0.0)",
     "pandas (>=2.2.3,<3.0.0)",
-    "sqlalchemy (>=2.0.40,<3.0.0)"
+    "sqlalchemy (>=2.0.40,<3.0.0)",
+    "psycopg2-binary (>=2.9.10,<3.0.0)"
 ]
 
 

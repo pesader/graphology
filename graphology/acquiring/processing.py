@@ -11,18 +11,25 @@ PROCESSED_DATA_DIRECTORY.mkdir(parents=True, exist_ok=True)
 
 TABLE_PREFIXES = ["affiliations", "authorships", "documents"]
 
-for prefix in TABLE_PREFIXES:
-    # Find all matching authorship files
-    tsv_files = sorted(RESULTS_DIRECTORY.glob(f"{prefix}*.tsv"))
 
-    # Load and concatenate all files
-    df = pd.concat(
-        (pd.read_csv(f, sep="\t", dtype=str) for f in tsv_files), ignore_index=True
-    )
+def main():
+    for prefix in TABLE_PREFIXES:
+        # Find all matching authorship files
+        tsv_files = sorted(RESULTS_DIRECTORY.glob(f"{prefix}*.tsv"))
 
-    if prefix == "authorships":
-        df["affiliation"] = df["affiliations"].str.split(",")
-        df = df.explode("affiliations").reset_index(drop=True)
+        # Load and concatenate all files
+        df = pd.concat(
+            (pd.read_csv(f, sep="\t", dtype=str) for f in tsv_files), ignore_index=True
+        )
 
-    # Save to a single merged file
-    df.to_csv(PROCESSED_DATA_DIRECTORY / f"{prefix}.tsv", sep="\t", index=False)
+        if prefix == "authorships":
+            df["affiliations"] = df["affiliations"].str.split(",")
+            df = df.explode("affiliations").reset_index(drop=True)
+            df = df.rename(columns={"affiliations": "affiliation_id"})
+
+        # Save to a single merged file
+        df.to_csv(PROCESSED_DATA_DIRECTORY / f"{prefix}.tsv", sep="\t", index=False)
+
+
+if __name__ == "__main__":
+    main()

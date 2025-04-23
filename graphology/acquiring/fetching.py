@@ -24,22 +24,23 @@ PICKLES_DIRECTORY: Path = DATA_DIRECTORY / Path(timestamp) / Path("pickles")
 RESULTS_DIRECTORY.mkdir(parents=True, exist_ok=True)
 PICKLES_DIRECTORY.mkdir(parents=True, exist_ok=True)
 
+fields = (
+    "eid doi pii pubmed_id title subtype subtypeDescription "
+    "creator afid affilname affiliation_city "
+    "affiliation_country author_count author_names author_ids "
+    "author_afids coverDate coverDisplayDate publicationName "
+    "issn source_id eIssn aggregationType volume "
+    "issueIdentifier article_number pageRange description "
+    "authkeywords citedby_count openaccess freetoread "
+    "freetoreadLabel fund_acr fund_no fund_sponsor"
+)
+ScopusSearchResult = namedtuple("ScopusSearchResult", fields)
+
 
 def main():
     # Taken from pybliometrics.scopus.scopus_search
     # The following code snippet is licensed under the MIT License.
     # SPDX-License-Identifier: MIT
-    fields = (
-        "eid doi pii pubmed_id title subtype subtypeDescription "
-        "creator afid affilname affiliation_city "
-        "affiliation_country author_count author_names author_ids "
-        "author_afids coverDate coverDisplayDate publicationName "
-        "issn source_id eIssn aggregationType volume "
-        "issueIdentifier article_number pageRange description "
-        "authkeywords citedby_count openaccess freetoread "
-        "freetoreadLabel fund_acr fund_no fund_sponsor"
-    )
-    ScopusSearchResult = namedtuple("ScopusSearchResult", fields)
 
     for year in range(END_YEAR, START_YEAR - 1, -1):
         query = f"AF-ID({UNICAMP_AFFILIATION_ID}) AND PUBYEAR = {year}"

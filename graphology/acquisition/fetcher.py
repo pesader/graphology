@@ -1,16 +1,8 @@
 import pickle
 from collections import namedtuple
-from pathlib import Path
 from datetime import datetime
 from pybliometrics.scopus import ScopusSearch, init as scopus_init
-
-# Search parameters
-UNICAMP_AFFILIATION_ID = "60029570"
-END_YEAR = 2025
-START_YEAR = 2020
-
-# Directory structure
-DATA_DIRECTORY: Path = Path("data")
+from .constants import DATA_DIRECTORY
 
 fields = (
     "eid doi pii pubmed_id title subtype subtypeDescription "
@@ -26,24 +18,28 @@ ScopusSearchResult = namedtuple("ScopusSearchResult", fields)
 
 
 class Fetcher:
-    def __init__(self, start_year: int, stop_year: int) -> None:
+    def __init__(self, start_year: int, end_year: int) -> None:
         # This statement reads the credentials needed to access the Scopus API
         scopus_init()
 
         self.start_year: int = start_year
-        self.stop_year: int = stop_year
+        self.end_year: int = end_year
 
     def fetch(self) -> str:
-        timestamp = datetime.now().isoformat(timespec="seconds").replace(":", "-")
-        PICKLES_DIRECTORY = DATA_DIRECTORY / timestamp / "raw"
-        PICKLES_DIRECTORY.mkdir(parents=True, exist_ok=True)
+        # Search parameters
+        UNICAMP_AFFILIATION_ID = "60029570"
 
-        for year in range(self.stop_year, self.start_year - 1, -1):
+        # Directory structure
+        timestamp = datetime.now().isoformat(timespec="seconds").replace(":", "-")
+        RAW_DATA_DIRECTORY = DATA_DIRECTORY / timestamp / "raw"
+        RAW_DATA_DIRECTORY.mkdir(parents=True, exist_ok=True)
+
+        for year in range(self.end_year, self.start_year - 1, -1):
             query = f"AF-ID({UNICAMP_AFFILIATION_ID}) AND PUBYEAR = {year}"
             search = ScopusSearch(query, subscriber=True)
             if search.results:
                 results = [ScopusSearchResult(*result) for result in search.results]
-                with open(PICKLES_DIRECTORY / f"results_{year}.pkl", "wb") as f:
+                with open(RAW_DATA_DIRECTORY / f"results_{year}.pkl", "wb") as f:
                     pickle.dump(results, f)
 
         return timestamp

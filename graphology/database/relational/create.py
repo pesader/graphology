@@ -8,12 +8,7 @@ import keyring
 from sqlalchemy.engine import URL
 from sqlmodel import SQLModel, create_engine
 
-from graphology.database.relational.entities import (
-    Author,
-    Document,
-    Institution,
-    Authorship,
-)
+from graphology.database.relational.entities import *
 
 DATABASE_NAME = "graphology"
 

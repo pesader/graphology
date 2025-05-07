@@ -3,13 +3,7 @@ import pandas as pd
 from collections import namedtuple
 from pathlib import Path
 
-# Search parameters
-UNICAMP_AFFILIATION_ID = "60029570"
-END_YEAR = 2025
-START_YEAR = 2020
-
-# Directory structure
-DATA_DIRECTORY: Path = Path("data")
+from .constants import DATA_DIRECTORY
 
 fields = (
     "eid doi pii pubmed_id title subtype subtypeDescription "
@@ -25,16 +19,23 @@ ScopusSearchResult = namedtuple("ScopusSearchResult", fields)
 
 
 class Processor:
-    def __init__(self, timestamp: str) -> None:
+    def __init__(
+        self,
+        timestamp: str,
+        start_year: int,
+        end_year: int,
+    ) -> None:
         self.timestamp: str = timestamp
+        self.start_year: int = start_year
+        self.end_year: int = end_year
 
     def process(self):
-        PICKLES_DIRECTORY = DATA_DIRECTORY / self.timestamp / "raw"
-        RESULTS_DIRECTORY = DATA_DIRECTORY / self.timestamp / "processed"
-        RESULTS_DIRECTORY.mkdir(parents=True, exist_ok=True)
+        RAW_DATA_DIRECTORY = DATA_DIRECTORY / self.timestamp / "raw"
+        PROCESSED_DATA_DIRECTORY = DATA_DIRECTORY / self.timestamp / "processed"
+        PROCESSED_DATA_DIRECTORY.mkdir(parents=True, exist_ok=True)
 
-        for year in range(END_YEAR, START_YEAR - 1, -1):
-            pickle_path = PICKLES_DIRECTORY / f"results_{year}.pkl"
+        for year in range(self.end_year, self.start_year - 1, -1):
+            pickle_path = RAW_DATA_DIRECTORY / f"results_{year}.pkl"
             if not pickle_path.exists():
                 continue
 
@@ -108,22 +109,22 @@ class Processor:
                         )
 
             pd.DataFrame(documents).to_csv(
-                RESULTS_DIRECTORY / f"documents_{year}.tsv",
+                PROCESSED_DATA_DIRECTORY / f"documents_{year}.tsv",
                 sep="\t",
                 index=False,
             )
             pd.DataFrame(authors.values()).to_csv(
-                RESULTS_DIRECTORY / f"authors_{year}.tsv",
+                PROCESSED_DATA_DIRECTORY / f"authors_{year}.tsv",
                 sep="\t",
                 index=False,
             )
             pd.DataFrame(authorships).to_csv(
-                RESULTS_DIRECTORY / f"authorships_{year}.tsv",
+                PROCESSED_DATA_DIRECTORY / f"authorships_{year}.tsv",
                 sep="\t",
                 index=False,
             )
             pd.DataFrame(affiliations.values()).to_csv(
-                RESULTS_DIRECTORY / f"affiliations_{year}.tsv",
+                PROCESSED_DATA_DIRECTORY / f"affiliations_{year}.tsv",
                 sep="\t",
                 index=False,
             )

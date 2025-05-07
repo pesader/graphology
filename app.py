@@ -2,10 +2,20 @@ from graphology import Fetcher, Processor
 
 
 def main():
-    fetcher = Fetcher(start_year=2020, stop_year=2021)
+    START_YEAR = 2020
+    END_YEAR = 2021
+
+    fetcher = Fetcher(
+        start_year=START_YEAR,
+        end_year=END_YEAR,
+    )
     timestamp: str = fetcher.fetch()
 
-    processor = Processor(timestamp=timestamp)
+    processor = Processor(
+        timestamp=timestamp,
+        start_year=START_YEAR,
+        end_year=END_YEAR,
+    )
     processor.process()
     processor.merge()
 

@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session
 import pandas as pd
 
-from graphology.acquiring.processing import PROCESSED_DATA_DIRECTORY
+from graphology.acquisition.processing import PROCESSED_DATA_DIRECTORY
 from graphology.database.relational.create import engine, init_db
 from graphology.database.relational.entities import (
     Author,

@@ -7,8 +7,6 @@ from pybliometrics.scopus import ScopusSearch, init
 
 init()
 
-timestamp = datetime.now().isoformat(timespec="seconds").replace(":", "-")
-
 # Search parameters
 UNICAMP_AFFILIATION_ID = "60029570"
 END_YEAR = 2025
@@ -16,12 +14,6 @@ START_YEAR = 2020
 
 # Directory structure
 DATA_DIRECTORY: Path = Path("data")
-RESULTS_DIRECTORY: Path = DATA_DIRECTORY / Path(timestamp) / Path("raw")
-PICKLES_DIRECTORY: Path = DATA_DIRECTORY / Path(timestamp) / Path("pickles")
-
-# Ensure directories exists
-RESULTS_DIRECTORY.mkdir(parents=True, exist_ok=True)
-PICKLES_DIRECTORY.mkdir(parents=True, exist_ok=True)
 
 fields = (
     "eid doi pii pubmed_id title subtype subtypeDescription "
@@ -36,108 +28,112 @@ fields = (
 ScopusSearchResult = namedtuple("ScopusSearchResult", fields)
 
 
-def main():
-    # Taken from pybliometrics.scopus.scopus_search
-    # The following code snippet is licensed under the MIT License.
-    # SPDX-License-Identifier: MIT
+def fetch_and_save_results():
+    timestamp = datetime.now().isoformat(timespec="seconds").replace(":", "-")
+    PICKLES_DIRECTORY = DATA_DIRECTORY / timestamp / "pickles"
+    PICKLES_DIRECTORY.mkdir(parents=True, exist_ok=True)
 
     for year in range(END_YEAR, START_YEAR - 1, -1):
         query = f"AF-ID({UNICAMP_AFFILIATION_ID}) AND PUBYEAR = {year}"
         search = ScopusSearch(query, subscriber=True)
+        if search.results:
+            results = [ScopusSearchResult(*result) for result in search.results]
+            with open(PICKLES_DIRECTORY / f"results_{year}.pkl", "wb") as f:
+                pickle.dump(results, f)
+
+    return timestamp
+
+
+def process_pickles_to_tsv(timestamp: str):
+    PICKLES_DIRECTORY = DATA_DIRECTORY / timestamp / "pickles"
+    RESULTS_DIRECTORY = DATA_DIRECTORY / timestamp / "raw"
+    RESULTS_DIRECTORY.mkdir(parents=True, exist_ok=True)
+
+    for year in range(END_YEAR, START_YEAR - 1, -1):
+        pickle_path = PICKLES_DIRECTORY / f"results_{year}.pkl"
+        if not pickle_path.exists():
+            continue
+
+        with open(pickle_path, "rb") as f:
+            results = pickle.load(f)
 
         documents = []
         authorships = []
         authors = {}
         affiliations = {}
 
-        if search.results:
-            results = [ScopusSearchResult(*result) for result in search.results]
+        for result in results:
+            eid = result.eid
+            documents.append(
+                {
+                    "title": result.title,
+                    "eid": eid,
+                    "doi": result.doi,
+                    "openaccess": result.openaccess,
+                    "date": result.coverDate,
+                    "document_type": result.subtype,
+                    "document_type_description": result.subtypeDescription,
+                    "first_author": result.creator,
+                    "volume": result.volume,
+                    "issue": result.issueIdentifier,
+                    "page": result.pageRange,
+                    "citedby_count": result.citedby_count,
+                    "funding_acronym": result.fund_acr,
+                    "funding_number": result.fund_no,
+                    "funding_name": result.fund_sponsor,
+                    "source_name": result.publicationName,
+                    "source_type": result.aggregationType,
+                    "source_id": result.source_id,
+                    "source_issn": result.issn,
+                    "source_eissn": result.eIssn,
+                }
+            )
 
-            with open(PICKLES_DIRECTORY / Path(f"results_{year}.pkl"), "wb") as f:
-                pickle.dump(results, f)
-
-            for result in results:
-                eid = result.eid
-                documents.append(
-                    {
-                        "title": result.title,
-                        "eid": eid,
-                        "doi": result.doi,
-                        "openaccess": result.openaccess,
-                        "date": result.coverDate,
-                        "document_type": result.subtype,
-                        "document_type_description": result.subtypeDescription,
-                        "first_author": result.creator,
-                        "volume": result.volume,
-                        "issue": result.issueIdentifier,
-                        "page": result.pageRange,
-                        "citedby_count": result.citedby_count,
-                        "funding_acronym": result.fund_acr,
-                        "funding_number": result.fund_no,
-                        "funding_name": result.fund_sponsor,
-                        "source_name": result.publicationName,
-                        "source_type": result.aggregationType,
-                        "source_id": result.source_id,
-                        "source_issn": result.issn,
-                        "source_eissn": result.eIssn,
+            if result.afid:
+                afids = result.afid.split(";")
+                names = result.affilname.split(";")
+                cities = result.affiliation_city.split(";")
+                countries = result.affiliation_country.split(";")
+                for i in range(len(afids)):
+                    affiliations[afids[i]] = {
+                        "affiliation_id": afids[i],
+                        "name": names[i],
+                        "city": cities[i],
+                        "country": countries[i],
                     }
-                )
 
-                if result.afid:
-                    afids = result.afid.split(";")
-                    names = result.affilname.split(";")
-                    cities = result.affiliation_city.split(";")
-                    countries = result.affiliation_country.split(";")
-                    for i in range(len(afids)):
-                        affiliations[afids[i]] = {
-                            "affiliation_id": afids[i],
-                            "name": names[i],
-                            "city": cities[i],
-                            "country": countries[i],
-                        }
+            if result.author_ids:
+                ids = result.author_ids.split(";")
+                names = result.author_names.split(";")
+                afids = result.author_afids.split(";")
+                for i in range(len(ids)):
+                    author_id = ids[i]
+                    author_name = names[i]
+                    authors[author_id] = {"author_id": author_id, "name": author_name}
 
-                if result.author_ids:
-                    ids = result.author_ids.split(";")
-                    names = result.author_names.split(";")
-                    afids = result.author_afids.split(";")
-                    for i in range(len(ids)):
-                        author_id = ids[i]
-                        author_name = names[i]
-                        authors[author_id] = {
+                    authorships.append(
+                        {
+                            "eid": eid,
                             "author_id": author_id,
-                            "name": author_name,
+                            "affiliations": ",".join(afids[i].split("-")),
+                            "first_author": i == 0,
                         }
+                    )
 
-                        authorships.append(
-                            {
-                                "eid": eid,
-                                "author_id": author_id,
-                                "affiliations": ",".join(afids[i].split("-")),
-                                "first_author": True if i == 0 else False,
-                            }
-                        )
-
-            pd.DataFrame(documents).to_csv(
-                RESULTS_DIRECTORY / Path(f"documents_{year}.tsv"),
-                sep="\t",
-                index=False,
-            )
-            pd.DataFrame(authors.values()).to_csv(
-                RESULTS_DIRECTORY / Path(f"authors_{year}.tsv"),
-                sep="\t",
-                index=False,
-            )
-            pd.DataFrame(authorships).to_csv(
-                RESULTS_DIRECTORY / Path(f"authorships_{year}.tsv"),
-                sep="\t",
-                index=False,
-            )
-            pd.DataFrame(affiliations.values()).to_csv(
-                RESULTS_DIRECTORY / Path(f"affiliations_{year}.tsv"),
-                sep="\t",
-                index=False,
-            )
+        pd.DataFrame(documents).to_csv(
+            RESULTS_DIRECTORY / f"documents_{year}.tsv", sep="\t", index=False
+        )
+        pd.DataFrame(authors.values()).to_csv(
+            RESULTS_DIRECTORY / f"authors_{year}.tsv", sep="\t", index=False
+        )
+        pd.DataFrame(authorships).to_csv(
+            RESULTS_DIRECTORY / f"authorships_{year}.tsv", sep="\t", index=False
+        )
+        pd.DataFrame(affiliations.values()).to_csv(
+            RESULTS_DIRECTORY / f"affiliations_{year}.tsv", sep="\t", index=False
+        )
 
 
 if __name__ == "__main__":
-    main()
+    timestamp = fetch_and_save_results()
+    process_pickles_to_tsv(timestamp)

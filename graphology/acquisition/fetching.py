@@ -135,5 +135,6 @@ def process_pickles_to_tsv(timestamp: str):
 
 
 if __name__ == "__main__":
-    timestamp = fetch_and_save_results()
+    # timestamp = fetch_and_save_results()
+    timestamp = "2025-04-22T10-01-23"
     process_pickles_to_tsv(timestamp)

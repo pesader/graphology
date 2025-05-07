@@ -1,5 +1,4 @@
 import pickle
-
 from collections import namedtuple
 from pathlib import Path
 import pandas as pd
@@ -48,6 +47,7 @@ def main():
 
         documents = []
         authorships = []
+        authors = {}
         affiliations = {}
 
         if search.results:
@@ -101,11 +101,17 @@ def main():
                     names = result.author_names.split(";")
                     afids = result.author_afids.split(";")
                     for i in range(len(ids)):
+                        author_id = ids[i]
+                        author_name = names[i]
+                        authors[author_id] = {
+                            "author_id": author_id,
+                            "name": author_name,
+                        }
+
                         authorships.append(
                             {
                                 "eid": eid,
-                                "author_id": ids[i],
-                                "author_name": names[i],
+                                "author_id": author_id,
                                 "affiliations": ",".join(afids[i].split("-")),
                                 "first_author": True if i == 0 else False,
                             }
@@ -113,6 +119,11 @@ def main():
 
             pd.DataFrame(documents).to_csv(
                 RESULTS_DIRECTORY / Path(f"documents_{year}.tsv"),
+                sep="\t",
+                index=False,
+            )
+            pd.DataFrame(authors.values()).to_csv(
+                RESULTS_DIRECTORY / Path(f"authors_{year}.tsv"),
                 sep="\t",
                 index=False,
             )

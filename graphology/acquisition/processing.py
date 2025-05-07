@@ -9,13 +9,13 @@ PROCESSED_DATA_DIRECTORY: Path = DATA_DIRECTORY / Path(DATE) / Path("processed")
 # Ensure directories exists
 PROCESSED_DATA_DIRECTORY.mkdir(parents=True, exist_ok=True)
 
-TABLE_PREFIXES = ["affiliations", "authorships", "documents"]
+TABLE_PREFIXES = ["documents", "affiliations", "authors", "authorships"]
 
 
 def main():
     for prefix in TABLE_PREFIXES:
         # Find all matching authorship files
-        tsv_files = sorted(RESULTS_DIRECTORY.glob(f"{prefix}*.tsv"))
+        tsv_files = sorted(RESULTS_DIRECTORY.glob(f"{prefix}_*.tsv"))
 
         # Load and concatenate all files
         df = pd.concat(

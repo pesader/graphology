@@ -42,13 +42,11 @@ def populate_institutions():
 
 def populate_authors():
     df = pd.read_csv(
-        PROCESSED_DATA_DIRECTORY / Path("authorships.tsv"),
+        PROCESSED_DATA_DIRECTORY / Path("authors.tsv"),
         sep="\t",
     )
-    df = df.drop(columns=["eid", "affiliation_id", "first_author"])
     df = df.rename(
         columns={
-            "author_name": "name",
             "author_id": "scopus_id",
         }
     )
@@ -79,7 +77,6 @@ def populate_authorships():
         sep="\t",
         dtype={"affiliation_id": str},
     )
-    df = df.drop(columns=["author_name"])
     df["document_id"] = df["eid"].str.removeprefix("2-s2.0-")
     df = df.drop(columns=["eid"])
     df = df.rename(

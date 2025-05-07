@@ -30,7 +30,7 @@ ScopusSearchResult = namedtuple("ScopusSearchResult", fields)
 
 def fetch_and_save_results():
     timestamp = datetime.now().isoformat(timespec="seconds").replace(":", "-")
-    PICKLES_DIRECTORY = DATA_DIRECTORY / timestamp / "pickles"
+    PICKLES_DIRECTORY = DATA_DIRECTORY / timestamp / "raw"
     PICKLES_DIRECTORY.mkdir(parents=True, exist_ok=True)
 
     for year in range(END_YEAR, START_YEAR - 1, -1):
@@ -45,8 +45,8 @@ def fetch_and_save_results():
 
 
 def process_pickles_to_tsv(timestamp: str):
-    PICKLES_DIRECTORY = DATA_DIRECTORY / timestamp / "pickles"
-    RESULTS_DIRECTORY = DATA_DIRECTORY / timestamp / "raw"
+    PICKLES_DIRECTORY = DATA_DIRECTORY / timestamp / "raw"
+    RESULTS_DIRECTORY = DATA_DIRECTORY / timestamp / "processed"
     RESULTS_DIRECTORY.mkdir(parents=True, exist_ok=True)
 
     for year in range(END_YEAR, START_YEAR - 1, -1):

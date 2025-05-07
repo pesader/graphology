@@ -3,8 +3,8 @@ from pathlib import Path
 
 DATE: str = "2025-04-22T10-01-23"
 DATA_DIRECTORY: Path = Path("data")
-RESULTS_DIRECTORY: Path = DATA_DIRECTORY / Path(DATE) / Path("raw")
-PROCESSED_DATA_DIRECTORY: Path = DATA_DIRECTORY / Path(DATE) / Path("processed")
+RESULTS_DIRECTORY: Path = DATA_DIRECTORY / Path(DATE) / Path("processed")
+PROCESSED_DATA_DIRECTORY: Path = DATA_DIRECTORY / Path(DATE) / Path("merged")
 
 # Ensure directories exists
 PROCESSED_DATA_DIRECTORY.mkdir(parents=True, exist_ok=True)

@@ -3,7 +3,11 @@ import pandas as pd
 from collections import namedtuple
 from pathlib import Path
 
-from .constants import DATA_DIRECTORY
+from graphology.helpers import (
+    merged_data_directory,
+    processed_data_directory,
+    raw_data_directory,
+)
 
 fields = (
     "eid doi pii pubmed_id title subtype subtypeDescription "
@@ -25,17 +29,20 @@ class Processor:
         start_year: int,
         end_year: int,
     ) -> None:
-        self.timestamp: str = timestamp
         self.start_year: int = start_year
         self.end_year: int = end_year
 
-    def process(self):
-        RAW_DATA_DIRECTORY = DATA_DIRECTORY / self.timestamp / "raw"
-        PROCESSED_DATA_DIRECTORY = DATA_DIRECTORY / self.timestamp / "processed"
-        PROCESSED_DATA_DIRECTORY.mkdir(parents=True, exist_ok=True)
+        self.RAW_DATA_DIRECTORY: Path = raw_data_directory(timestamp)
 
+        self.PROCESSED_DATA_DIRECTORY: Path = processed_data_directory(timestamp)
+        self.PROCESSED_DATA_DIRECTORY.mkdir(parents=True, exist_ok=True)
+
+        self.MERGED_DATA_DIRECTORY: Path = merged_data_directory(timestamp)
+        self.MERGED_DATA_DIRECTORY.mkdir(parents=True, exist_ok=True)
+
+    def process(self):
         for year in range(self.end_year, self.start_year - 1, -1):
-            pickle_path = RAW_DATA_DIRECTORY / f"results_{year}.pkl"
+            pickle_path = self.RAW_DATA_DIRECTORY / f"results_{year}.pkl"
             if not pickle_path.exists():
                 continue
 
@@ -109,22 +116,22 @@ class Processor:
                         )
 
             pd.DataFrame(documents).to_csv(
-                PROCESSED_DATA_DIRECTORY / f"documents_{year}.tsv",
+                self.PROCESSED_DATA_DIRECTORY / f"documents_{year}.tsv",
                 sep="\t",
                 index=False,
             )
             pd.DataFrame(authors.values()).to_csv(
-                PROCESSED_DATA_DIRECTORY / f"authors_{year}.tsv",
+                self.PROCESSED_DATA_DIRECTORY / f"authors_{year}.tsv",
                 sep="\t",
                 index=False,
             )
             pd.DataFrame(authorships).to_csv(
-                PROCESSED_DATA_DIRECTORY / f"authorships_{year}.tsv",
+                self.PROCESSED_DATA_DIRECTORY / f"authorships_{year}.tsv",
                 sep="\t",
                 index=False,
             )
             pd.DataFrame(affiliations.values()).to_csv(
-                PROCESSED_DATA_DIRECTORY / f"affiliations_{year}.tsv",
+                self.PROCESSED_DATA_DIRECTORY / f"affiliations_{year}.tsv",
                 sep="\t",
                 index=False,
             )
@@ -132,13 +139,9 @@ class Processor:
     def merge(self):
         TABLE_PREFIXES = ["documents", "affiliations", "authors", "authorships"]
 
-        PROCESSED_DATA_DIRECTORY = DATA_DIRECTORY / self.timestamp / "processed"
-        MERGED_DATA_DIRECTORY: Path = DATA_DIRECTORY / self.timestamp / "merged"
-        MERGED_DATA_DIRECTORY.mkdir(parents=True, exist_ok=True)
-
         for prefix in TABLE_PREFIXES:
             # Find all matching authorship files
-            tsv_files = sorted(PROCESSED_DATA_DIRECTORY.glob(f"{prefix}_*.tsv"))
+            tsv_files = sorted(self.PROCESSED_DATA_DIRECTORY.glob(f"{prefix}_*.tsv"))
 
             # Load and concatenate all files
             df = pd.concat(
@@ -152,4 +155,8 @@ class Processor:
                 df = df.rename(columns={"affiliations": "affiliation_id"})
 
             # Save to a single merged file
-            df.to_csv(MERGED_DATA_DIRECTORY / f"{prefix}.tsv", sep="\t", index=False)
+            df.to_csv(
+                self.MERGED_DATA_DIRECTORY / f"{prefix}.tsv",
+                sep="\t",
+                index=False,
+            )

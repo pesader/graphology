@@ -1,8 +1,10 @@
 import pickle
+from pathlib import Path
 from collections import namedtuple
 from datetime import datetime
 from pybliometrics.scopus import ScopusSearch, init as scopus_init
-from .constants import DATA_DIRECTORY
+from graphology.constants import DATA_DIRECTORY
+from graphology.helpers import raw_data_directory
 
 fields = (
     "eid doi pii pubmed_id title subtype subtypeDescription "
@@ -25,12 +27,15 @@ class Fetcher:
         self.start_year: int = start_year
         self.end_year: int = end_year
 
+        timestamp: str = datetime.now().isoformat(timespec="seconds").replace(":", "-")
+        self.RAW_DATA_DIRECTORY: Path = raw_data_directory(timestamp)
+        self.RAW_DATA_DIRECTORY.mkdir(parents=True, exist_ok=True)
+
     def fetch(self) -> str:
         # Search parameters
         UNICAMP_AFFILIATION_ID = "60029570"
 
         # Directory structure
-        timestamp = datetime.now().isoformat(timespec="seconds").replace(":", "-")
         RAW_DATA_DIRECTORY = DATA_DIRECTORY / timestamp / "raw"
         RAW_DATA_DIRECTORY.mkdir(parents=True, exist_ok=True)
 

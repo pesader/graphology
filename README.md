@@ -4,6 +4,12 @@ An analysis of scientific collaboration at Unicamp using graphs.
 
 ## Relationa Database
 
+Set your password with
+
+```sh
+keyring set graphology-postgres admin
+```
+
 To run the database, use this command:
 
 ```sh

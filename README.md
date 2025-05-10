@@ -14,10 +14,10 @@ To run the database, use this command:
 
 ```sh
 podman run -d \
-  --name graphology \
-  -e POSTGRES_PASSWORD=$(keyring get graphology admin) \
+  --name graphology-postgres \
+  -e POSTGRES_PASSWORD=$(keyring get graphology-postgres admin) \
   -e POSTGRES_USER=admin \
-  -e POSTGRES_DB=graphology \
+  -e POSTGRES_DB=postgres \
   -v "$HOME/Documents/repos/pfg/.storage/" \
   -p 5432:5432 \
   --rm \
@@ -29,10 +29,10 @@ If you're running it inside an interactive container (i.e. a toolbx), run:
 
 ```sh
 flatpak-spawn --host podman run -d \
-  --name graphology \
-  -e POSTGRES_PASSWORD=$(keyring get graphology admin) \
+  --name graphology-postgres \
+  -e POSTGRES_PASSWORD=$(keyring get graphology-postgres admin) \
   -e POSTGRES_USER=admin \
-  -e POSTGRES_DB=graphology \
+  -e POSTGRES_DB=postgres \
   -v "$HOME/Documents/repos/pfg/.storage/" \
   -p 5432:5432 \
   --rm \

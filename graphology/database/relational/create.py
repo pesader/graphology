@@ -10,7 +10,9 @@ from sqlmodel import SQLModel, create_engine
 
 from graphology.database.relational.entities import *
 
-DATABASE_NAME = "graphology"
+PROJECT_NAME = "graphology"
+RDBMS_NAME = "postgres"
+DATABASE_NAME = RDBMS_NAME
 
 # Infrastructure
 DBMS_NAME = "postgresql"
@@ -19,7 +21,8 @@ DBMS_DRIVER = "psycopg2"
 # Credentials
 HOST = "localhost"
 USERNAME = "admin"
-PASSWORD = keyring.get_password(DATABASE_NAME, USERNAME)
+KEYRING_ENTRY = f"{PROJECT_NAME}-{RDBMS_NAME}"
+PASSWORD = keyring.get_password(KEYRING_ENTRY, USERNAME)
 
 url_kwargs = {
     "drivername": f"{DBMS_NAME}+{DBMS_DRIVER}",

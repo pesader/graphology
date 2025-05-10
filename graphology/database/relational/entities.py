@@ -28,10 +28,12 @@ class Author(SQLModel, table=True):
     institutions: list["Institution"] = Relationship(
         back_populates="authors",
         link_model=Authorship,
+        sa_relationship_kwargs={"viewonly": True},
     )
     documents: list["Document"] = Relationship(
         back_populates="authors",
         link_model=Authorship,
+        sa_relationship_kwargs={"viewonly": True},
     )
 
 
@@ -44,10 +46,12 @@ class Institution(SQLModel, table=True):
     authors: list["Author"] = Relationship(
         back_populates="institutions",
         link_model=Authorship,
+        sa_relationship_kwargs={"viewonly": True},
     )
     documents: list["Document"] = Relationship(
         back_populates="institutions",
         link_model=Authorship,
+        sa_relationship_kwargs={"viewonly": True},
     )
 
 
@@ -76,8 +80,10 @@ class Document(SQLModel, table=True):
     authors: list["Author"] = Relationship(
         back_populates="documents",
         link_model=Authorship,
+        sa_relationship_kwargs={"viewonly": True},
     )
     institutions: list["Institution"] = Relationship(
         back_populates="documents",
         link_model=Authorship,
+        sa_relationship_kwargs={"viewonly": True},
     )

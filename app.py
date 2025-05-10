@@ -10,18 +10,17 @@ def main():
         end_year=END_YEAR,
     )
     timestamp: str = extractor.timestamp
-    extractor.fetch()
+    extractor.extract()
 
     transformer = Transformer(
         timestamp=timestamp,
         start_year=START_YEAR,
         end_year=END_YEAR,
     )
-    transformer.process()
-    transformer.merge()
+    transformer.transform()
 
     loader = RDBMSLoader(timestamp)
-    loader.populate()
+    loader.load()
 
 
 if __name__ == "__main__":

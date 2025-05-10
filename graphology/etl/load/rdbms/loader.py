@@ -96,7 +96,7 @@ class RDBMSLoader:
         mappings = df.to_dict(orient="records")
         self._batch_insert(Authorship, mappings)
 
-    def populate(self):
+    def load(self):
         # Independent entities
         self._populate_authors()
         self._populate_documents()

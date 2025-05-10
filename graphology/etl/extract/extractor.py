@@ -33,7 +33,7 @@ class Extractor:
         self.RAW_DATA_DIRECTORY: Path = raw_data_directory(self.timestamp)
         self.RAW_DATA_DIRECTORY.mkdir(parents=True, exist_ok=True)
 
-    def fetch(self):
+    def extract(self):
         # Search parameters
         UNICAMP_AFFILIATION_ID = "60029570"
 

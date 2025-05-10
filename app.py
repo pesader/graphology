@@ -1,4 +1,5 @@
 from graphology import Fetcher, Processor
+from graphology.database.relational.loader import RDBMSLoader
 
 
 def main():
@@ -18,6 +19,9 @@ def main():
     )
     processor.process()
     processor.merge()
+
+    loader = RDBMSLoader(timestamp)
+    loader.load()
 
 
 if __name__ == "__main__":

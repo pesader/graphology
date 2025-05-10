@@ -38,7 +38,7 @@ class RDBMSLoader:
 
     def _populate_institutions(self):
         df = pd.read_csv(
-            self.MERGED_DATA_DIRECTORY / Path("affiliations.tsv"),
+            self.MERGED_DATA_DIRECTORY / Path("institutions.tsv"),
             sep="\t",
         )
         df = df.where(pd.notnull(df), None)
@@ -70,7 +70,7 @@ class RDBMSLoader:
         df = pd.read_csv(
             self.MERGED_DATA_DIRECTORY / Path("authorships.tsv"),
             sep="\t",
-            dtype={"affiliation_id": str},
+            dtype={"institution_id": str},
         )
         df = df.drop_duplicates()
         df = df.where(pd.notnull(df), None)

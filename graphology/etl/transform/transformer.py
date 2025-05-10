@@ -39,7 +39,7 @@ class Transformer:
             documents = []
             authorships = []
             authors = {}
-            affiliations = {}
+            institutions = {}
 
             for result in results:
                 document_id = result.eid
@@ -73,7 +73,7 @@ class Transformer:
                     cities = result.affiliation_city.split(";")
                     countries = result.affiliation_country.split(";")
                     for i in range(len(afids)):
-                        affiliations[afids[i]] = {
+                        institutions[afids[i]] = {
                             "scopus_id": afids[i],
                             "name": names[i],
                             "city": cities[i],
@@ -96,7 +96,7 @@ class Transformer:
                             {
                                 "document_id": document_id,
                                 "author_id": author_id,
-                                "affiliation_ids": ",".join(afids[i].split("-")),
+                                "institution_ids": ",".join(afids[i].split("-")),
                                 "first_author": i == 0,
                             }
                         )
@@ -113,8 +113,8 @@ class Transformer:
                 index=False,
             )
 
-            pd.DataFrame(affiliations.values()).to_csv(
-                self.PROCESSED_DATA_DIRECTORY / f"affiliations_{year}.tsv",
+            pd.DataFrame(institutions.values()).to_csv(
+                self.PROCESSED_DATA_DIRECTORY / f"institutions_{year}.tsv",
                 sep="\t",
                 index=False,
             )
@@ -126,7 +126,7 @@ class Transformer:
             )
 
     def merge(self):
-        TABLE_PREFIXES = ["documents", "affiliations", "authors", "authorships"]
+        TABLE_PREFIXES = ["documents", "institutions", "authors", "authorships"]
 
         for prefix in TABLE_PREFIXES:
             # Find all matching authorship files
@@ -147,7 +147,7 @@ class Transformer:
 
     def tidy(self):
         """
-        Tidy the data in authorships.tsv by splitting the "affiliations" row
+        Tidy the data in authorships.tsv by splitting the "institution_ids" row
         """
         # fmt: off
         df_authorships = pd.read_csv(
@@ -155,11 +155,11 @@ class Transformer:
             sep="\t",
             dtype=str,
         )
-        df_authorships["affiliation_ids"] = df_authorships["affiliation_ids"].str.split(",")
-        df_authorships = df_authorships.explode("affiliation_ids").reset_index(drop=True)
+        df_authorships["institution_ids"] = df_authorships["institution_ids"].str.split(",")
+        df_authorships = df_authorships.explode("institution_ids").reset_index(drop=True)
         df_authorships = df_authorships.rename(
             columns={
-                "affiliation_ids": "affiliation_id",
+                "institution_ids": "institution_id",
             }
         )
         df_authorships.to_csv(
@@ -171,22 +171,22 @@ class Transformer:
 
     def clean(self):
         """
-        Remove authorship.tsv entries from institutions not in affiliations.tsv
+        Remove authorship.tsv entries from institutions not in institutions.tsv
         """
         df_authorships = pd.read_csv(
             self.MERGED_DATA_DIRECTORY / "authorships.tsv",
             sep="\t",
             dtype=str,
         )
-        df_affiliations = pd.read_csv(
-            self.MERGED_DATA_DIRECTORY / "affiliations.tsv",
+        df_institutions = pd.read_csv(
+            self.MERGED_DATA_DIRECTORY / "institutions.tsv",
             sep="\t",
             dtype=str,
         )
 
-        valid_affiliations = df_affiliations["scopus_id"].unique().tolist()
+        valid_institutions = df_institutions["scopus_id"].unique().tolist()
         filtered_authorships = df_authorships[
-            df_authorships["affiliation_id"].isin(valid_affiliations)
+            df_authorships["institution_id"].isin(valid_institutions)
         ]
 
         filtered_authorships.to_csv(
@@ -196,7 +196,7 @@ class Transformer:
         )
 
     def drop_duplicates(self):
-        TABLE_PREFIXES = ["documents", "affiliations", "authors", "authorships"]
+        TABLE_PREFIXES = ["documents", "institutions", "authors", "authorships"]
 
         for prefix in TABLE_PREFIXES:
             df = pd.read_csv(

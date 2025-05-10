@@ -102,42 +102,29 @@ class Transformer:
                             }
                         )
 
-            df_documents = pd.DataFrame(documents)
-            df_documents.to_csv(
+            pd.DataFrame(documents).to_csv(
                 self.PROCESSED_DATA_DIRECTORY / f"documents_{year}.tsv",
                 sep="\t",
                 index=False,
             )
 
-            df_authors = pd.DataFrame(authors.values())
-            df_authors.to_csv(
+            pd.DataFrame(authors.values()).to_csv(
                 self.PROCESSED_DATA_DIRECTORY / f"authors_{year}.tsv",
                 sep="\t",
                 index=False,
             )
 
-            df_affiliations = pd.DataFrame(affiliations.values())
-            df_affiliations.to_csv(
+            pd.DataFrame(affiliations.values()).to_csv(
                 self.PROCESSED_DATA_DIRECTORY / f"affiliations_{year}.tsv",
                 sep="\t",
                 index=False,
             )
 
-            # fmt: off
-            df_authorships = pd.DataFrame(authorships)
-            df_authorships["affiliations"] = df_authorships["affiliations"].str.split(",")
-            df_authorships = df_authorships.explode("affiliations").reset_index(drop=True)
-            df_authorships = df_authorships.rename(
-                columns={
-                    "affiliations": "affiliation_id",
-                }
-            )
-            df_authorships.to_csv(
+            pd.DataFrame(authorships).to_csv(
                 self.PROCESSED_DATA_DIRECTORY / f"authorships_{year}.tsv",
                 sep="\t",
                 index=False,
             )
-            # fmt: on
 
     def merge(self):
         TABLE_PREFIXES = ["documents", "affiliations", "authors", "authorships"]
@@ -158,6 +145,28 @@ class Transformer:
                 sep="\t",
                 index=False,
             )
+
+    def tidy(self):
+        """
+        Tidy the data in authorships.tsv by splitting the "affiliations" row
+        """
+        df_authorships = pd.read_csv(
+            self.MERGED_DATA_DIRECTORY / "authorships.tsv",
+            sep="\t",
+            dtype=str,
+        )
+        df_authorships["affiliations"] = df_authorships["affiliations"].str.split(",")
+        df_authorships = df_authorships.explode("affiliations").reset_index(drop=True)
+        df_authorships = df_authorships.rename(
+            columns={
+                "affiliations": "affiliation_id",
+            }
+        )
+        df_authorships.to_csv(
+            self.MERGED_DATA_DIRECTORY / "authorships.tsv",
+            sep="\t",
+            index=False,
+        )
 
     def clean(self):
         """
@@ -180,4 +189,5 @@ class Transformer:
     def transform(self):
         self.process()
         self.merge()
+        self.tidy()
         self.clean()

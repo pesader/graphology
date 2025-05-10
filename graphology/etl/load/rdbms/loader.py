@@ -5,14 +5,14 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session
 import pandas as pd
 
-from graphology.database.relational.create import engine, init_db
-from graphology.database.relational.entities import (
+from graphology.etl.load.rdbms.database import engine, init_db
+from graphology.etl._helpers import merged_data_directory
+from graphology.etl.load.rdbms.entities import (
     Author,
     Authorship,
     Document,
     Institution,
 )
-from graphology.helpers import merged_data_directory
 
 
 class RDBMSLoader:
@@ -96,7 +96,7 @@ class RDBMSLoader:
         mappings = df.to_dict(orient="records")
         self._batch_insert(Authorship, mappings)
 
-    def load(self):
+    def populate(self):
         # Independent entities
         self._populate_authors()
         self._populate_documents()

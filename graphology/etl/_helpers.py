@@ -1,5 +1,5 @@
 from pathlib import Path
-from .constants import DATA_DIRECTORY
+from ._constants import DATA_DIRECTORY
 
 
 def raw_data_directory(timestamp: str) -> Path:

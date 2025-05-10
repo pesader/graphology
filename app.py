@@ -1,27 +1,27 @@
-from graphology import Fetcher, Processor
-from graphology.database.relational.loader import RDBMSLoader
+from graphology.etl import Extractor, Transformer, RDBMSLoader
 
 
 def main():
     START_YEAR = 2020
     END_YEAR = 2021
 
-    fetcher = Fetcher(
+    extractor = Extractor(
         start_year=START_YEAR,
         end_year=END_YEAR,
     )
-    timestamp: str = fetcher.fetch()
+    timestamp: str = extractor.timestamp
+    extractor.fetch()
 
-    processor = Processor(
+    transformer = Transformer(
         timestamp=timestamp,
         start_year=START_YEAR,
         end_year=END_YEAR,
     )
-    processor.process()
-    processor.merge()
+    transformer.process()
+    transformer.merge()
 
     loader = RDBMSLoader(timestamp)
-    loader.load()
+    loader.populate()
 
 
 if __name__ == "__main__":

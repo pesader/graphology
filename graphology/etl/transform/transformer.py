@@ -1,28 +1,15 @@
 import pickle
 import pandas as pd
-from collections import namedtuple
 from pathlib import Path
 
-from graphology.helpers import (
+from graphology.etl._helpers import (
     merged_data_directory,
     processed_data_directory,
     raw_data_directory,
 )
 
-fields = (
-    "eid doi pii pubmed_id title subtype subtypeDescription "
-    "creator afid affilname affiliation_city "
-    "affiliation_country author_count author_names author_ids "
-    "author_afids coverDate coverDisplayDate publicationName "
-    "issn source_id eIssn aggregationType volume "
-    "issueIdentifier article_number pageRange description "
-    "authkeywords citedby_count openaccess freetoread "
-    "freetoreadLabel fund_acr fund_no fund_sponsor"
-)
-ScopusSearchResult = namedtuple("ScopusSearchResult", fields)
 
-
-class Processor:
+class Transformer:
     def __init__(
         self,
         timestamp: str,

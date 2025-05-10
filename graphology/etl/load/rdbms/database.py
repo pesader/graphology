@@ -1,14 +1,13 @@
+import keyring
+from sqlalchemy.engine import URL
+from sqlmodel import SQLModel, create_engine
+
 # NOTE: for SQLModel.create_all() to work, SQLModel and all models need to
 #       be imported before the database engine object. Importing them here
 #       guarantees that happens, as recommended by the documentation:
 #       https://sqlmodel.tiangolo.com/tutorial/create-db-and-table/#calling-create_all
 
-
-import keyring
-from sqlalchemy.engine import URL
-from sqlmodel import SQLModel, create_engine
-
-from graphology.database.relational.entities import *
+from graphology.etl.load.rdbms.entities import *
 
 PROJECT_NAME = "graphology"
 RDBMS_NAME = "postgres"

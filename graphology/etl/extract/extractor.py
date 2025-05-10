@@ -44,3 +44,4 @@ class Extractor:
                 results = [ScopusSearchResult(*result) for result in search.results]
                 with open(self.RAW_DATA_DIRECTORY / f"results_{year}.pkl", "wb") as f:
                     pickle.dump(results, f)
+            print(f"Done extracting data from {year}!")

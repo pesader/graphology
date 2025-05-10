@@ -41,8 +41,6 @@ class RDBMSLoader:
             self.MERGED_DATA_DIRECTORY / Path("affiliations.tsv"),
             sep="\t",
         )
-        df = df.rename(columns={"affiliation_id": "scopus_id"})
-        df = df.drop_duplicates(subset="scopus_id", keep="first")
         df = df.where(pd.notnull(df), None)
 
         mappings = df.to_dict(orient="records")
@@ -53,12 +51,6 @@ class RDBMSLoader:
             self.MERGED_DATA_DIRECTORY / Path("authors.tsv"),
             sep="\t",
         )
-        df = df.rename(
-            columns={
-                "author_id": "scopus_id",
-            }
-        )
-        df = df.drop_duplicates(subset="scopus_id", keep="first")
         df = df.where(pd.notnull(df), None)
 
         mappings = df.to_dict(orient="records")
@@ -69,9 +61,6 @@ class RDBMSLoader:
             self.MERGED_DATA_DIRECTORY / Path("documents.tsv"),
             sep="\t",
         )
-        df = df.drop(columns=["first_author"])
-        df["scopus_id"] = df["eid"].str.removeprefix("2-s2.0-")
-        df = df.drop_duplicates(subset="scopus_id", keep="first")
         df = df.where(pd.notnull(df), None)
 
         mappings = df.to_dict(orient="records")
@@ -82,13 +71,6 @@ class RDBMSLoader:
             self.MERGED_DATA_DIRECTORY / Path("authorships.tsv"),
             sep="\t",
             dtype={"affiliation_id": str},
-        )
-        df["document_id"] = df["eid"].str.removeprefix("2-s2.0-")
-        df = df.drop(columns=["eid"])
-        df = df.rename(
-            columns={
-                "affiliation_id": "institution_id",
-            }
         )
         df = df.drop_duplicates()
         df = df.where(pd.notnull(df), None)

@@ -56,8 +56,7 @@ class Institution(SQLModel, table=True):
 
 
 class Document(SQLModel, table=True):
-    scopus_id: str = Field(primary_key=True)
-    eid: str = Field(index=True)
+    scopus_id: str = Field(primary_key=True)  # a.k.a "eid"
     doi: str | None = Field(default=None, index=True)
     title: str = Field(index=True)
     openaccess: bool

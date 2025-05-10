@@ -42,17 +42,16 @@ class Transformer:
             affiliations = {}
 
             for result in results:
-                eid = result.eid
+                document_id = result.eid
                 documents.append(
                     {
                         "title": result.title,
-                        "eid": eid,
+                        "scopus_id": document_id,
                         "doi": result.doi,
                         "openaccess": result.openaccess,
                         "date": result.coverDate,
                         "document_type": result.subtype,
                         "document_type_description": result.subtypeDescription,
-                        "first_author": result.creator,
                         "volume": result.volume,
                         "issue": result.issueIdentifier,
                         "page": result.pageRange,
@@ -75,7 +74,7 @@ class Transformer:
                     countries = result.affiliation_country.split(";")
                     for i in range(len(afids)):
                         affiliations[afids[i]] = {
-                            "affiliation_id": afids[i],
+                            "scopus_id": afids[i],
                             "name": names[i],
                             "city": cities[i],
                             "country": countries[i],
@@ -89,15 +88,15 @@ class Transformer:
                         author_id = ids[i]
                         author_name = names[i]
                         authors[author_id] = {
-                            "author_id": author_id,
+                            "scopus_id": author_id,
                             "name": author_name,
                         }
 
                         authorships.append(
                             {
-                                "eid": eid,
+                                "document_id": document_id,
                                 "author_id": author_id,
-                                "affiliations": ",".join(afids[i].split("-")),
+                                "affiliation_ids": ",".join(afids[i].split("-")),
                                 "first_author": i == 0,
                             }
                         )
@@ -150,16 +149,17 @@ class Transformer:
         """
         Tidy the data in authorships.tsv by splitting the "affiliations" row
         """
+        # fmt: off
         df_authorships = pd.read_csv(
             self.MERGED_DATA_DIRECTORY / "authorships.tsv",
             sep="\t",
             dtype=str,
         )
-        df_authorships["affiliations"] = df_authorships["affiliations"].str.split(",")
-        df_authorships = df_authorships.explode("affiliations").reset_index(drop=True)
+        df_authorships["affiliation_ids"] = df_authorships["affiliation_ids"].str.split(",")
+        df_authorships = df_authorships.explode("affiliation_ids").reset_index(drop=True)
         df_authorships = df_authorships.rename(
             columns={
-                "affiliations": "affiliation_id",
+                "affiliation_ids": "affiliation_id",
             }
         )
         df_authorships.to_csv(
@@ -167,25 +167,26 @@ class Transformer:
             sep="\t",
             index=False,
         )
+        # fmt: on
 
     def clean(self):
         """
         Remove authorship.tsv entries from institutions not in affiliations.tsv
         """
-        authorships = pd.read_csv(
+        df_authorships = pd.read_csv(
             self.MERGED_DATA_DIRECTORY / "authorships.tsv",
             sep="\t",
             dtype=str,
         )
-        affiliations = pd.read_csv(
+        df_affiliations = pd.read_csv(
             self.MERGED_DATA_DIRECTORY / "affiliations.tsv",
             sep="\t",
             dtype=str,
         )
 
-        valid_affiliations = affiliations["affiliation_id"].unique().tolist()
-        filtered_authorships = authorships[
-            authorships["affiliation_id"].isin(valid_affiliations)
+        valid_affiliations = df_affiliations["scopus_id"].unique().tolist()
+        filtered_authorships = df_authorships[
+            df_authorships["affiliation_id"].isin(valid_affiliations)
         ]
 
         filtered_authorships.to_csv(
@@ -194,8 +195,30 @@ class Transformer:
             index=False,
         )
 
+    def drop_duplicates(self):
+        TABLE_PREFIXES = ["documents", "affiliations", "authors", "authorships"]
+
+        for prefix in TABLE_PREFIXES:
+            df = pd.read_csv(
+                self.MERGED_DATA_DIRECTORY / f"{prefix}.tsv",
+                sep="\t",
+                dtype=str,
+            )
+
+            if prefix == "authorships":
+                df = df.drop_duplicates()
+            else:
+                df = df.drop_duplicates(subset="scopus_id", keep="first")
+
+            df.to_csv(
+                self.MERGED_DATA_DIRECTORY / f"{prefix}.tsv",
+                sep="\t",
+                index=False,
+            )
+
     def transform(self):
         self.process()
         self.merge()
         self.tidy()
         self.clean()
+        self.drop_duplicates()

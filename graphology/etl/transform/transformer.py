@@ -102,26 +102,42 @@ class Transformer:
                             }
                         )
 
-            pd.DataFrame(documents).to_csv(
+            df_documents = pd.DataFrame(documents)
+            df_documents.to_csv(
                 self.PROCESSED_DATA_DIRECTORY / f"documents_{year}.tsv",
                 sep="\t",
                 index=False,
             )
-            pd.DataFrame(authors.values()).to_csv(
+
+            df_authors = pd.DataFrame(authors.values())
+            df_authors.to_csv(
                 self.PROCESSED_DATA_DIRECTORY / f"authors_{year}.tsv",
                 sep="\t",
                 index=False,
             )
-            pd.DataFrame(authorships).to_csv(
-                self.PROCESSED_DATA_DIRECTORY / f"authorships_{year}.tsv",
-                sep="\t",
-                index=False,
-            )
-            pd.DataFrame(affiliations.values()).to_csv(
+
+            df_affiliations = pd.DataFrame(affiliations.values())
+            df_affiliations.to_csv(
                 self.PROCESSED_DATA_DIRECTORY / f"affiliations_{year}.tsv",
                 sep="\t",
                 index=False,
             )
+
+            # fmt: off
+            df_authorships = pd.DataFrame(authorships)
+            df_authorships["affiliations"] = df_authorships["affiliations"].str.split(",")
+            df_authorships = df_authorships.explode("affiliations").reset_index(drop=True)
+            df_authorships = df_authorships.rename(
+                columns={
+                    "affiliations": "affiliation_id",
+                }
+            )
+            df_authorships.to_csv(
+                self.PROCESSED_DATA_DIRECTORY / f"authorships_{year}.tsv",
+                sep="\t",
+                index=False,
+            )
+            # fmt: on
 
     def merge(self):
         TABLE_PREFIXES = ["documents", "affiliations", "authors", "authorships"]
@@ -135,11 +151,6 @@ class Transformer:
                 (pd.read_csv(f, sep="\t", dtype=str) for f in tsv_files),
                 ignore_index=True,
             )
-
-            if prefix == "authorships":
-                df["affiliations"] = df["affiliations"].str.split(",")
-                df = df.explode("affiliations").reset_index(drop=True)
-                df = df.rename(columns={"affiliations": "affiliation_id"})
 
             # Save to a single merged file
             df.to_csv(

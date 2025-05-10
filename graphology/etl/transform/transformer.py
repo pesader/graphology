@@ -170,10 +170,18 @@ class Transformer:
 
     def clean(self):
         """
-        Removes authorship.tsv entries from institutions not in affiliations.tsv
+        Remove authorship.tsv entries from institutions not in affiliations.tsv
         """
-        authorships = pd.read_csv(self.MERGED_DATA_DIRECTORY / "authorships.tsv")
-        affiliations = pd.read_csv(self.MERGED_DATA_DIRECTORY / "affiliations.tsv")
+        authorships = pd.read_csv(
+            self.MERGED_DATA_DIRECTORY / "authorships.tsv",
+            sep="\t",
+            dtype=str,
+        )
+        affiliations = pd.read_csv(
+            self.MERGED_DATA_DIRECTORY / "affiliations.tsv",
+            sep="\t",
+            dtype=str,
+        )
 
         valid_affiliations = affiliations["affiliation_id"].unique().tolist()
         filtered_authorships = authorships[

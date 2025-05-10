@@ -147,3 +147,26 @@ class Transformer:
                 sep="\t",
                 index=False,
             )
+
+    def clean(self):
+        """
+        Removes authorship.tsv entries from institutions not in affiliations.tsv
+        """
+        authorships = pd.read_csv(self.MERGED_DATA_DIRECTORY / "authorships.tsv")
+        affiliations = pd.read_csv(self.MERGED_DATA_DIRECTORY / "affiliations.tsv")
+
+        valid_affiliations = affiliations["affiliation_id"].unique().tolist()
+        filtered_authorships = authorships[
+            authorships["affiliation_id"].isin(valid_affiliations)
+        ]
+
+        filtered_authorships.to_csv(
+            self.MERGED_DATA_DIRECTORY / "authorships.tsv",
+            sep="\t",
+            index=False,
+        )
+
+    def transform(self):
+        self.process()
+        self.merge()
+        self.clean()

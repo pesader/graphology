@@ -2,8 +2,8 @@ from graphology.etl import Extractor, Transformer, RDBMSLoader
 
 
 def main():
-    START_YEAR = 2020
-    END_YEAR = 2021
+    START_YEAR = 2000
+    END_YEAR = 2025
 
     extractor = Extractor(
         start_year=START_YEAR,

@@ -5,4 +5,5 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
-cp data/$1/merged/*.tsv /var/lib/neo4j/import
+mkdir -p /var/lib/neo4j/import/$1
+cp data/$1/merged/*.tsv /var/lib/neo4j/import/$1

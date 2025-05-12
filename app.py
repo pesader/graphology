@@ -1,4 +1,9 @@
-from graphology.etl import Extractor, Transformer, RDBMSLoader
+from graphology.etl import (
+    Extractor,
+    Transformer,
+    RDBMSLoader,
+    GDBMSLoader,
+)
 
 
 def main():
@@ -20,6 +25,9 @@ def main():
     transformer.transform()
 
     loader = RDBMSLoader(timestamp)
+    loader.load()
+
+    loader = GDBMSLoader(timestamp)
     loader.load()
 
 

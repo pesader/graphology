@@ -1,3 +1,3 @@
 from .extract import Extractor
 from .transform import Transformer
-from .load import RDBMSLoader
+from .load import RDBMSLoader, GDBMSLoader

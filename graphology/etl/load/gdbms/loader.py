@@ -1,105 +1,87 @@
 import uuid
-from pathlib import Path
-import pandas as pd
 
-from graphology.etl._helpers import merged_data_directory
 from .database import driver
 
 
 class GDBMSLoader:
     def __init__(self, timestamp: str):
-        self.MERGED_DATA_DIRECTORY: Path = merged_data_directory(timestamp)
-        self.MERGED_DATA_DIRECTORY.mkdir(parents=True, exist_ok=True)
+        self.timestamp: str = timestamp
+
+    def _populate_institutions(self):
+        file_url = f"file:///{self.timestamp}/institutions.tsv"
+        with driver.session() as session:
+            session.run(
+                """
+                LOAD CSV WITH HEADERS FROM $file_url AS row FIELDTERMINATOR '\t'
+                MERGE (i:Institution {scopus_id: row.scopus_id})
+                SET i += row;
+                """,
+                {
+                    "file_url": file_url,
+                },
+            )
+        print("Finished populating Institutions!")
+
+    def _populate_authors(self):
+        file_url = f"file:///{self.timestamp}/authors.tsv"
+        with driver.session() as session:
+            session.run(
+                """
+                LOAD CSV WITH HEADERS FROM $file_url AS row FIELDTERMINATOR '\t'
+                MERGE (a:Author {scopus_id: row.scopus_id})
+                SET a.name = row.name;
+                """,
+                {
+                    "file_url": file_url,
+                },
+            )
+        print("Finished populating Authors!")
+
+    def _populate_documents(self):
+        file_url = f"file:///{self.timestamp}/documents.tsv"
+        with driver.session() as session:
+            session.run(
+                """
+                LOAD CSV WITH HEADERS FROM $file_url AS row FIELDTERMINATOR '\t'
+                MERGE (d:Document {scopus_id: row.scopus_id})
+                SET d += row;
+                """,
+                {
+                    "file_url": file_url,
+                },
+            )
+        print("Finished populating Documents!")
+
+    def _populate_authorships(self):
+        file_url = f"file:///{self.timestamp}/authorships.tsv"
+        with driver.session() as session:
+            session.run(
+                """
+                LOAD CSV WITH HEADERS FROM $file_url AS row FIELDTERMINATOR '\t'
+                CREATE (authorship:Authorship {
+                    id: $authorship_id,
+                    first_author: row.first_author
+                })
+                WITH authorship, row
+                MATCH (a:Author {scopus_id: row.author_id}),
+                      (d:Document {scopus_id: row.document_id}),
+                      (i:Institution {scopus_id: row.institution_id})
+                MERGE (authorship)-[:INVOLVES_AUTHOR]->(a)
+                MERGE (authorship)-[:INVOLVES_DOCUMENT]->(d)
+                MERGE (authorship)-[:INVOLVES_INSTITUTION]->(i)
+                """,
+                {
+                    "file_url": file_url,
+                    "authorship_id": str(uuid.uuid4()),
+                },
+            )
+        print("Finished populating Authorships!")
 
     def load(self):
-        # Load TSVs
-        df_authors = pd.read_csv(
-            self.MERGED_DATA_DIRECTORY / Path("authors.tsv"),
-            sep="\t",
-        )
-        df_documents = pd.read_csv(
-            self.MERGED_DATA_DIRECTORY / Path("documents.tsv"),
-            sep="\t",
-        )
-        df_institutions = pd.read_csv(
-            self.MERGED_DATA_DIRECTORY / Path("institutions.tsv"),
-            sep="\t",
-        )
-        df_authorships = pd.read_csv(
-            self.MERGED_DATA_DIRECTORY / Path("authorships.tsv"),
-            sep="\t",
-            dtype={"institution_id": str},
-        )
+        # Independent nodes
+        self._populate_institutions()
+        self._populate_authors()
+        self._populate_documents()
 
-        with driver.session() as session:
-            # Create Author nodes
-            for _, row in df_authors.iterrows():
-                session.run(
-                    """
-                    MERGE (a:Author {scopus_id: $scopus_id})
-                    SET a.name = $name
-                    """,
-                    {
-                        "scopus_id": str(row["scopus_id"]),
-                        "name": row["name"],
-                    },
-                )
-
-            # Create Document nodes
-            for _, row in df_documents.iterrows():
-                session.run(
-                    """
-                    MERGE (d:Document {scopus_id: $scopus_id})
-                    SET d += $props
-                    """,
-                    {
-                        "scopus_id": row["scopus_id"],
-                        "props": row.drop("scopus_id").to_dict(),
-                    },
-                )
-
-            # Create Institution nodes
-            for _, row in df_institutions.iterrows():
-                session.run(
-                    """
-                    MERGE (i:Institution {scopus_id: $scopus_id})
-                    SET i += $props
-                    """,
-                    {
-                        "scopus_id": str(row["scopus_id"]),
-                        "props": row.drop("scopus_id").to_dict(),
-                    },
-                )
-
-            # Create Authorship relationships
-            for _, row in df_authorships.iterrows():
-                author_id = row["author_id"]
-                document_id = row["document_id"]
-                institution_id = row["institution_id"]
-                first_author = row["first_author"]
-
-                # UUID as authorship primary key
-                authorship_id = str(uuid.uuid4())
-
-                session.run(
-                    """
-                    CREATE (authorship:Authorship {
-                        id: $authorship_id,
-                        first_author: $first_author
-                    })
-                    WITH authorship
-                    MATCH (a:Author {scopus_id: $author_id}),
-                          (d:Document {scopus_id: $document_id}),
-                          (i:Institution {scopus_id: $institution_id})
-                    MERGE (authorship)-[:INVOLVES_AUTHOR]->(a)
-                    MERGE (authorship)-[:INVOLVES_DOCUMENT]->(d)
-                    MERGE (authorship)-[:INVOLVES_INSTITUTION]->(i)
-                    """,
-                    {
-                        "authorship_id": authorship_id,
-                        "first_author": first_author,
-                        "author_id": author_id,
-                        "document_id": document_id,
-                        "institution_id": institution_id,
-                    },
-                )
+        # Associative node
+        self._populate_authorships()

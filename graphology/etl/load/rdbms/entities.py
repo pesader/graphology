@@ -70,9 +70,9 @@ class Document(SQLModel, table=True):
     funding_acronym: str | None
     funding_number: str | None
     funding_name: str | None
-    source_name: str
-    source_type: str
-    source_id: str
+    source_name: str | None
+    source_type: str | None
+    source_id: str | None
     source_issn: str | None
     source_eissn: str | None
 

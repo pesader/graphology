@@ -4,6 +4,8 @@ An analysis of scientific collaboration at Unicamp using graphs.
 
 ## Relationa Database
 
+### Setup
+
 Set your password with
 
 ```sh
@@ -41,6 +43,8 @@ flatpak-spawn --host podman run -d \
 ```
 
 ## Graph Database
+
+### Setup
 
 These instructions are for Fedora Workstation, and based on the official
 installation instructions laid out
@@ -83,3 +87,15 @@ sudo neo4j-admin dbms set-initial-password $YOUR_PASSWORD
 ```sh
 sudo neo4j start
 ```
+
+### Moving data to Neo4j's import directory
+
+Neo4j requires files to be placed in a certain directory to import data from
+them. For convenience, there's a small shell script that does that in
+`scripts/cptsv.sh`. You can run it like so:
+
+```sh
+sudo ./scripts/cptsv.sh $TIMESTAMP
+```
+
+Where `$TIMESTAMP` is timestamp string, like "2025-05-10T17-44-35".

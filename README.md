@@ -99,3 +99,12 @@ sudo ./scripts/cptsv.sh $TIMESTAMP
 ```
 
 Where `$TIMESTAMP` is timestamp string, like "2025-05-10T17-44-35".
+
+### Resetting the `neo4j` database
+
+To reset the database (clear all data in it), run:
+
+```sh
+sudo ./scripts/rmdb.sh
+```
+

@@ -38,7 +38,7 @@ class GDBMSLoader:
                     """
                     MERGE (a:Author {scopus_id: $scopus_id})
                     SET a.name = $name
-                """,
+                    """,
                     {
                         "scopus_id": str(row["scopus_id"]),
                         "name": row["name"],
@@ -51,7 +51,7 @@ class GDBMSLoader:
                     """
                     MERGE (d:Document {scopus_id: $scopus_id})
                     SET d += $props
-                """,
+                    """,
                     {
                         "scopus_id": row["scopus_id"],
                         "props": row.drop("scopus_id").to_dict(),
@@ -64,7 +64,7 @@ class GDBMSLoader:
                     """
                     MERGE (i:Institution {scopus_id: $scopus_id})
                     SET i += $props
-                """,
+                    """,
                     {
                         "scopus_id": str(row["scopus_id"]),
                         "props": row.drop("scopus_id").to_dict(),
@@ -94,7 +94,7 @@ class GDBMSLoader:
                     MERGE (authorship)-[:INVOLVES_AUTHOR]->(a)
                     MERGE (authorship)-[:INVOLVES_DOCUMENT]->(d)
                     MERGE (authorship)-[:INVOLVES_INSTITUTION]->(i)
-                """,
+                    """,
                     {
                         "authorship_id": authorship_id,
                         "first_author": first_author,

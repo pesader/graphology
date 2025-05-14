@@ -1,4 +1,6 @@
 import pickle
+import logging
+
 import pandas as pd
 from pathlib import Path
 
@@ -8,6 +10,8 @@ from graphology.etl._helpers import (
     raw_data_directory,
 )
 
+from graphology import log
+
 
 class Transformer:
     def __init__(
@@ -16,6 +20,7 @@ class Transformer:
         start_year: int,
         end_year: int,
     ) -> None:
+        self.timestamp: str = timestamp
         self.start_year: int = start_year
         self.end_year: int = end_year
 
@@ -185,11 +190,33 @@ class Transformer:
         )
 
         valid_institutions = df_institutions["scopus_id"].unique().tolist()
-        filtered_authorships = df_authorships[
+        df_filtered_authorships = df_authorships[
             df_authorships["institution_id"].isin(valid_institutions)
         ]
 
-        filtered_authorships.to_csv(
+        n_authorships = len(df_authorships)
+        n_filtered_authorships = len(df_filtered_authorships)
+        removed_authorships_percentage = round(
+            (n_authorships - n_filtered_authorships) / n_authorships * 100,
+            2,  # Round to two decimal places
+        )
+        log(
+            logging.INFO,
+            self.timestamp,
+            f"number of authorships before cleaning: {n_authorships}",
+        )
+        log(
+            logging.INFO,
+            self.timestamp,
+            f"number of authorships after cleaning: {n_filtered_authorships}",
+        )
+        log(
+            logging.INFO,
+            self.timestamp,
+            f"percentage of authorships removed: {removed_authorships_percentage}%",
+        )
+
+        df_filtered_authorships.to_csv(
             self.MERGED_DATA_DIRECTORY / "authorships.tsv",
             sep="\t",
             index=False,

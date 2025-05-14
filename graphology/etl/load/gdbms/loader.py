@@ -1,6 +1,8 @@
 import uuid
+import logging
 
 from .database import driver
+from graphology import log
 
 
 class GDBMSLoader:
@@ -20,7 +22,12 @@ class GDBMSLoader:
                     "file_url": file_url,
                 },
             )
-        print("Finished populating Institutions!")
+
+        log(
+            logging.INFO,
+            self.timestamp,
+            f"finished populating institution nodes",
+        )
 
     def _populate_authors(self):
         file_url = f"file:///{self.timestamp}/authors.tsv"
@@ -35,7 +42,12 @@ class GDBMSLoader:
                     "file_url": file_url,
                 },
             )
-        print("Finished populating Authors!")
+
+        log(
+            logging.INFO,
+            self.timestamp,
+            f"finished populating author nodes",
+        )
 
     def _populate_documents(self):
         file_url = f"file:///{self.timestamp}/documents.tsv"
@@ -50,7 +62,12 @@ class GDBMSLoader:
                     "file_url": file_url,
                 },
             )
-        print("Finished populating Documents!")
+
+        log(
+            logging.INFO,
+            self.timestamp,
+            f"finished populating document nodes",
+        )
 
     def _populate_authorships(self):
         file_url = f"file:///{self.timestamp}/authorships.tsv"
@@ -75,7 +92,12 @@ class GDBMSLoader:
                     "authorship_id": str(uuid.uuid4()),
                 },
             )
-        print("Finished populating Authorships!")
+
+        log(
+            logging.INFO,
+            self.timestamp,
+            f"finished populating authorship nodes",
+        )
 
     def load(self):
         # Independent nodes

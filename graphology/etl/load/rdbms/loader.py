@@ -13,6 +13,7 @@ from graphology.etl.load.rdbms.entities import (
     Document,
     Institution,
 )
+from graphology import log
 
 
 class RDBMSLoader:
@@ -20,6 +21,7 @@ class RDBMSLoader:
         self,
         timestamp: str,
     ) -> None:
+        self.timestamp = timestamp
         self.MERGED_DATA_DIRECTORY: Path = merged_data_directory(timestamp)
         self.MERGED_DATA_DIRECTORY.mkdir(parents=True, exist_ok=True)
 
@@ -46,6 +48,12 @@ class RDBMSLoader:
         mappings = df.to_dict(orient="records")
         self._batch_insert(Institution, mappings)
 
+        log(
+            logging.INFO,
+            self.timestamp,
+            f"finished populating institutions table",
+        )
+
     def _populate_authors(self):
         df = pd.read_csv(
             self.MERGED_DATA_DIRECTORY / Path("authors.tsv"),
@@ -56,6 +64,12 @@ class RDBMSLoader:
         mappings = df.to_dict(orient="records")
         self._batch_insert(Author, mappings)
 
+        log(
+            logging.INFO,
+            self.timestamp,
+            f"finished populating authors table",
+        )
+
     def _populate_documents(self):
         df = pd.read_csv(
             self.MERGED_DATA_DIRECTORY / Path("documents.tsv"),
@@ -65,6 +79,12 @@ class RDBMSLoader:
 
         mappings = df.to_dict(orient="records")
         self._batch_insert(Document, mappings)
+
+        log(
+            logging.INFO,
+            self.timestamp,
+            f"finished populating documents table",
+        )
 
     def _populate_authorships(self):
         df = pd.read_csv(
@@ -77,6 +97,12 @@ class RDBMSLoader:
 
         mappings = df.to_dict(orient="records")
         self._batch_insert(Authorship, mappings)
+
+        log(
+            logging.INFO,
+            self.timestamp,
+            f"finished populating authorships table",
+        )
 
     def load(self):
         # Independent entities

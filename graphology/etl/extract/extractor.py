@@ -1,10 +1,12 @@
 import pickle
+import logging
 from pathlib import Path
 from collections import namedtuple
 from datetime import datetime
 from pybliometrics.scopus import ScopusSearch, init as scopus_init
 
 from graphology.etl._helpers import raw_data_directory
+from graphology import log
 
 fields = (
     "eid doi pii pubmed_id title subtype subtypeDescription "
@@ -44,4 +46,14 @@ class Extractor:
                 results = [ScopusSearchResult(*result) for result in search.results]
                 with open(self.RAW_DATA_DIRECTORY / f"results_{year}.pkl", "wb") as f:
                     pickle.dump(results, f)
-            print(f"Done extracting data from {year}!")
+            log(
+                logging.INFO,
+                self.timestamp,
+                f"finished extracting data from {year}",
+            )
+
+        log(
+            logging.INFO,
+            self.timestamp,
+            f"finished extracting data from all requested years",
+        )

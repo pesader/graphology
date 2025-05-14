@@ -1,5 +1,8 @@
 import logging
 import sys
+import uuid
+
+RUN_ID = str(uuid.uuid4())[:8]
 
 # Create logger
 logger = logging.getLogger("graphology")
@@ -7,7 +10,7 @@ logger.setLevel(logging.DEBUG)
 
 # Formatter
 formatter = logging.Formatter(
-    "%(asctime)s - %(levelname)s - %(module)s - %(funcName)s - %(message)s"
+    f"%(asctime)s - run:{RUN_ID} - %(levelname)s - %(module)s - %(funcName)s - %(message)s"
 )
 
 # File handler
@@ -24,4 +27,8 @@ logger.addHandler(stream_handler)
 
 
 def log(level: int, timestamp: str, message: object):
-    logger.log(level, f"(data timestamp: {timestamp}) {message}", stacklevel=2)
+    logger.log(
+        level,
+        f"timestamp:{timestamp} - {message}",
+        stacklevel=2,
+    )

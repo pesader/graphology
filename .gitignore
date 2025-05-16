@@ -175,3 +175,6 @@ cython_debug/
 
 # Data
 data
+
+# Neo4j import reports
+*.report

@@ -1,11 +1,13 @@
 import pickle
 import logging
+import uuid
 
 import pandas as pd
 from pathlib import Path
 
 from graphology.etl._helpers import (
     merged_data_directory,
+    neo4j_data_directory,
     processed_data_directory,
     raw_data_directory,
 )
@@ -31,6 +33,9 @@ class Transformer:
 
         self.MERGED_DATA_DIRECTORY: Path = merged_data_directory(timestamp)
         self.MERGED_DATA_DIRECTORY.mkdir(parents=True, exist_ok=True)
+
+        self.NEO4J_DATA_DIRECTORY: Path = neo4j_data_directory(timestamp)
+        self.NEO4J_DATA_DIRECTORY.mkdir(parents=True, exist_ok=True)
 
     def process(self):
         for year in range(self.end_year, self.start_year - 1, -1):
@@ -244,9 +249,89 @@ class Transformer:
                 index=False,
             )
 
+    def format_neo4j_import(self):
+        import pandas as pd
+
+        # Load cleaned authorships
+        df_authorships = pd.read_csv(
+            self.MERGED_DATA_DIRECTORY / "authorships.tsv",
+            sep="\t",
+            dtype=str,
+        )
+
+        # Generate UUIDs for authorship nodes
+        df_authorships["id:ID(Authorship)"] = [
+            str(uuid.uuid4()) for _ in range(len(df_authorships))
+        ]
+
+        # Save authorship nodes
+        df_authorship_nodes = df_authorships[
+            [
+                "id:ID(Authorship)",
+                "author_id",
+                "document_id",
+                "institution_id",
+                "first_author",
+            ]
+        ]
+        df_authorship_nodes.to_csv(
+            self.NEO4J_DATA_DIRECTORY / "node_authorships.tsv",
+            sep="\t",
+            index=False,
+        )
+
+        # Load cleaned authors
+        nodes = ["authors", "documents", "institutions"]
+        for node in nodes:
+            df = pd.read_csv(
+                self.MERGED_DATA_DIRECTORY / f"{node}.tsv",
+                sep="\t",
+                dtype=str,
+            )
+
+            df = df.rename(
+                columns={
+                    "scopus_id": f"scopus_id:ID({node.capitalize()[:-1]})",
+                }
+            )
+
+            df.to_csv(
+                self.NEO4J_DATA_DIRECTORY / f"node_{node}.tsv",
+                sep="\t",
+                index=False,
+            )
+
+        # Create relationship files
+        def rel_df(start_col, end_col):
+            df = pd.DataFrame(
+                {
+                    ":START_ID(Authorship)": df_authorships["id:ID(Authorship)"],
+                    f":END_ID({end_col})": df_authorships[f"{end_col.lower()}_id"],
+                }
+            )
+            df = df[df[f":END_ID({end_col})"].notna()]
+            return df
+
+        rel_df("id", "Author").to_csv(
+            self.NEO4J_DATA_DIRECTORY / "rel_authorship_author.tsv",
+            sep="\t",
+            index=False,
+        )
+        rel_df("id", "Document").to_csv(
+            self.NEO4J_DATA_DIRECTORY / "rel_authorship_document.tsv",
+            sep="\t",
+            index=False,
+        )
+        rel_df("id", "Institution").to_csv(
+            self.NEO4J_DATA_DIRECTORY / "rel_authorship_institution.tsv",
+            sep="\t",
+            index=False,
+        )
+
     def transform(self):
         self.process()
         self.merge()
         self.tidy()
         self.clean()
         self.drop_duplicates()
+        self.format_neo4j_import()

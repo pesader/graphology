@@ -12,3 +12,7 @@ def processed_data_directory(timestamp: str) -> Path:
 
 def merged_data_directory(timestamp: str) -> Path:
     return DATA_DIRECTORY / timestamp / "merged"
+
+
+def neo4j_data_directory(timestamp: str) -> Path:
+    return DATA_DIRECTORY / timestamp / "neo4j"

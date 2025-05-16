@@ -198,7 +198,7 @@ class Transformer:
         n_filtered_authorships = len(df_filtered_authorships)
         removed_authorships_percentage = round(
             (n_authorships - n_filtered_authorships) / n_authorships * 100,
-            2,  # Round to two decimal places
+            5,  # Round to five decimal places
         )
         log(
             logging.INFO,

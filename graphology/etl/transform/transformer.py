@@ -191,7 +191,8 @@ class Transformer:
 
         valid_institutions = df_institutions["scopus_id"].unique().tolist()
         df_filtered_authorships = df_authorships[
-            df_authorships["institution_id"].isin(valid_institutions)
+            df_authorships["institution_id"].isnull()
+            | df_authorships["institution_id"].isin(valid_institutions)
         ]
 
         n_authorships = len(df_authorships)

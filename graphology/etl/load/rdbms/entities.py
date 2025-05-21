@@ -8,14 +8,17 @@ class Authorship(SQLModel, table=True):
     author_id: str = Field(
         default=None,
         foreign_key="author.scopus_id",
+        index=True,
     )
     document_id: str = Field(
         default=None,
         foreign_key="document.scopus_id",
+        index=True,
     )
     institution_id: str | None = Field(
         default=None,
         foreign_key="institution.scopus_id",
+        index=True,
     )
 
     first_author: bool = False

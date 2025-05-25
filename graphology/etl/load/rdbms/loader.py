@@ -20,9 +20,14 @@ class RDBMSLoader:
     def __init__(
         self,
         timestamp: str,
+        start_year: int,
+        end_year: int,
+        data_directory: Path,
     ) -> None:
         self.timestamp = timestamp
-        self.MERGED_DATA_DIRECTORY: Path = merged_data_directory(timestamp)
+        self.MERGED_DATA_DIRECTORY: Path = merged_data_directory(
+            self.timestamp, start_year, end_year, data_directory
+        )
         self.MERGED_DATA_DIRECTORY.mkdir(parents=True, exist_ok=True)
 
         init_db()

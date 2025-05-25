@@ -8,10 +8,11 @@ from sqlalchemy import text
 from sqlmodel import Session
 
 from graphology.etl._helpers import (
+    is_empty,
     merged_data_directory,
     neo4j_data_directory,
     processed_data_directory,
-    raw_data_directory,
+    raw_data_directory_path,
 )
 
 from graphology.etl.load.rdbms.database import engine
@@ -25,23 +26,27 @@ class Transformer:
         timestamp: str,
         start_year: int,
         end_year: int,
+        data_directory: Path,
     ) -> None:
         self.timestamp: str = timestamp
         self.start_year: int = start_year
         self.end_year: int = end_year
 
-        self.RAW_DATA_DIRECTORY: Path = raw_data_directory(timestamp)
+        self.RAW_DATA_DIRECTORY: Path = raw_data_directory_path(
+            self.timestamp, start_year, end_year, data_directory
+        )
 
-        self.PROCESSED_DATA_DIRECTORY: Path = processed_data_directory(timestamp)
+        self.PROCESSED_DATA_DIRECTORY: Path = processed_data_directory(
+            self.timestamp, start_year, end_year, data_directory
+        )
         self.PROCESSED_DATA_DIRECTORY.mkdir(parents=True, exist_ok=True)
 
-        self.MERGED_DATA_DIRECTORY: Path = merged_data_directory(timestamp)
+        self.MERGED_DATA_DIRECTORY: Path = merged_data_directory(
+            self.timestamp, start_year, end_year, data_directory
+        )
         self.MERGED_DATA_DIRECTORY.mkdir(parents=True, exist_ok=True)
 
-        self.NEO4J_DATA_DIRECTORY: Path = neo4j_data_directory(timestamp)
-        self.NEO4J_DATA_DIRECTORY.mkdir(parents=True, exist_ok=True)
-
-    def process(self):
+    def process(self) -> None:
         for year in range(self.end_year, self.start_year - 1, -1):
             pickle_path = self.RAW_DATA_DIRECTORY / f"results_{year}.pkl"
             if not pickle_path.exists():
@@ -159,9 +164,9 @@ class Transformer:
                 index=False,
             )
 
-    def tidy(self):
+    def normalize(self):
         """
-        Tidy the data in authorships.tsv by splitting the "institution_ids" row
+        Normalize the data in authorships.tsv by splitting the "institution_ids" row
         """
         # fmt: off
         df_authorships = pd.read_csv(
@@ -183,7 +188,7 @@ class Transformer:
         )
         # fmt: on
 
-    def clean(self):
+    def remove_invalid_authorships(self):
         """
         Remove authorship.tsv entries from institutions not in institutions.tsv
         """
@@ -254,10 +259,29 @@ class Transformer:
             )
 
     def transform(self):
+        # Do nothing if data has already been processed
+        if not is_empty(self.PROCESSED_DATA_DIRECTORY):
+            log(
+                logging.INFO,
+                self.timestamp,
+                "Skipped data processing, because data has already been processed.",
+            )
+            return
+
         self.process()
+
+        # Do nothing more if data has already been merged
+        if not is_empty(self.MERGED_DATA_DIRECTORY):
+            log(
+                logging.INFO,
+                self.timestamp,
+                "Skipped data merging, because data has already been merged.",
+            )
+            return
+
         self.merge()
-        self.tidy()
-        self.clean()
+        self.normalize()
+        self.remove_invalid_authorships()
         self.drop_duplicates()
 
 
@@ -266,6 +290,20 @@ class RDBMSTransformer(Transformer):
 
 
 class GDBMSTransformer(Transformer):
+    def __init__(
+        self,
+        timestamp: str,
+        start_year: int,
+        end_year: int,
+        data_directory: Path,
+    ) -> None:
+        super().__init__(timestamp, start_year, end_year, data_directory)
+
+        self.NEO4J_DATA_DIRECTORY: Path = neo4j_data_directory(
+            self.timestamp, start_year, end_year, data_directory
+        )
+        self.NEO4J_DATA_DIRECTORY.mkdir(parents=True, exist_ok=True)
+
     def format_neo4j_import(self):
         # Load cleaned authorships
         df_authorships = pd.read_csv(
@@ -382,5 +420,15 @@ class GDBMSTransformer(Transformer):
 
     def transform(self):
         super().transform()
+
+        # Do nothing if data has already been formatted for neo4j import
+        if not is_empty(self.NEO4J_DATA_DIRECTORY):
+            log(
+                logging.INFO,
+                self.timestamp,
+                "Skipped data formatting for neo4j, because that has already been done.",
+            )
+            return
+
         self.format_neo4j_import()
         self.add_neo4j_author_edges()

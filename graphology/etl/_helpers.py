@@ -1,6 +1,5 @@
 from datetime import datetime
 from pathlib import Path
-from ._constants import DATA_DIRECTORY
 
 
 def now() -> str:
@@ -8,17 +7,68 @@ def now() -> str:
     return timestamp
 
 
-def raw_data_directory(timestamp: str) -> Path:
-    return DATA_DIRECTORY / timestamp / "raw"
+def output_directory_name(
+    timestamp: str,
+    start_year: int,
+    end_year: int,
+):
+    return f"{timestamp}_{start_year}-{end_year}"
 
 
-def processed_data_directory(timestamp: str) -> Path:
-    return DATA_DIRECTORY / timestamp / "processed"
+def output_directory_path(
+    timestamp: str,
+    start_year: int,
+    end_year: int,
+    data_directory: Path,
+):
+    return data_directory / output_directory_name(timestamp, start_year, end_year)
 
 
-def merged_data_directory(timestamp: str) -> Path:
-    return DATA_DIRECTORY / timestamp / "merged"
+def raw_data_directory_path(
+    timestamp: str,
+    start_year: int,
+    end_year: int,
+    data_directory: Path,
+) -> Path:
+    return (
+        output_directory_path(timestamp, start_year, end_year, data_directory) / "raw"
+    )
 
 
-def neo4j_data_directory(timestamp: str) -> Path:
-    return DATA_DIRECTORY / timestamp / "neo4j"
+def processed_data_directory(
+    timestamp: str,
+    start_year: int,
+    end_year: int,
+    data_directory: Path,
+) -> Path:
+    return (
+        output_directory_path(timestamp, start_year, end_year, data_directory)
+        / "processed"
+    )
+
+
+def merged_data_directory(
+    timestamp: str,
+    start_year: int,
+    end_year: int,
+    data_directory: Path,
+) -> Path:
+    return (
+        output_directory_path(timestamp, start_year, end_year, data_directory)
+        / "merged"
+    )
+
+
+def neo4j_data_directory(
+    timestamp: str,
+    start_year: int,
+    end_year: int,
+    data_directory: Path,
+) -> Path:
+    return (
+        output_directory_path(timestamp, start_year, end_year, data_directory) / "neo4j"
+    )
+
+
+def is_empty(directory: Path):
+    return not any(directory.iterdir())

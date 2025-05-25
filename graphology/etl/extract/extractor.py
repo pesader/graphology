@@ -5,7 +5,7 @@ from collections import namedtuple
 from datetime import datetime
 from pybliometrics.scopus import ScopusSearch, init as scopus_init
 
-from graphology.etl._helpers import raw_data_directory
+from graphology.etl._helpers import is_empty, raw_data_directory_path
 from graphology import log
 
 fields = (
@@ -22,7 +22,13 @@ ScopusSearchResult = namedtuple("ScopusSearchResult", fields)
 
 
 class Extractor:
-    def __init__(self, timestamp: str, start_year: int, end_year: int) -> None:
+    def __init__(
+        self,
+        timestamp: str,
+        start_year: int,
+        end_year: int,
+        data_directory: Path,
+    ) -> None:
         # This statement reads the credentials needed to access the Scopus API
         scopus_init()
 
@@ -30,10 +36,12 @@ class Extractor:
         self.start_year: int = start_year
         self.end_year: int = end_year
 
-        self.RAW_DATA_DIRECTORY: Path = raw_data_directory(self.timestamp)
+        self.RAW_DATA_DIRECTORY: Path = raw_data_directory_path(
+            self.timestamp, start_year, end_year, data_directory
+        )
         self.RAW_DATA_DIRECTORY.mkdir(parents=True, exist_ok=True)
 
-    def extract(self):
+    def fetch(self) -> None:
         # Search parameters
         UNICAMP_AFFILIATION_ID = "60029570"
 
@@ -55,3 +63,15 @@ class Extractor:
             self.timestamp,
             f"finished extracting data from all requested years",
         )
+
+    def extract(self):
+        # Do nothing if data has already been extracted
+        if not is_empty(self.RAW_DATA_DIRECTORY):
+            log(
+                logging.INFO,
+                self.timestamp,
+                "Skipped data extraction, because data has already been extracted.",
+            )
+            return
+
+        self.fetch()

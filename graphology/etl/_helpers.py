@@ -1,5 +1,11 @@
+from datetime import datetime
 from pathlib import Path
 from ._constants import DATA_DIRECTORY
+
+
+def now() -> str:
+    timestamp: str = datetime.now().isoformat(timespec="seconds").replace(":", "-")
+    return timestamp
 
 
 def raw_data_directory(timestamp: str) -> Path:

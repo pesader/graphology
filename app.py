@@ -3,6 +3,7 @@ from graphology.etl import (
     RDBMSLoader,
     GDBMSLoader,
 )
+from graphology.etl._helpers import now
 from graphology.etl.transform.transformer import GDBMSTransformer, RDBMSTransformer
 
 
@@ -10,12 +11,14 @@ def main():
     START_YEAR = 2000
     END_YEAR = 2025
 
+    timestamp = now()
+
     # Extract the data
     extractor = Extractor(
+        timestamp=timestamp,
         start_year=START_YEAR,
         end_year=END_YEAR,
     )
-    timestamp: str = extractor.timestamp
     extractor.extract()
 
     # Transform and load into RDBMS

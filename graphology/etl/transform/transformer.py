@@ -253,6 +253,19 @@ class Transformer:
                 index=False,
             )
 
+    def transform(self):
+        self.process()
+        self.merge()
+        self.tidy()
+        self.clean()
+        self.drop_duplicates()
+
+
+class RDBMSTransformer(Transformer):
+    pass
+
+
+class GDBMSTransformer(Transformer):
     def format_neo4j_import(self):
         # Load cleaned authorships
         df_authorships = pd.read_csv(
@@ -335,21 +348,21 @@ class Transformer:
             data = session.exec(
                 text(
                     """
-                    SELECT
-                        a1.scopus_id AS author1_id,
-                        a2.scopus_id AS author2_id,
-                        COUNT(DISTINCT au1.document_id) AS collaboration_count
-                    FROM
-                        authorship au1
-                    JOIN
-                        authorship au2 ON au1.document_id = au2.document_id AND au1.author_id < au2.author_id
-                    JOIN
-                        author a1 ON au1.author_id = a1.scopus_id
-                    JOIN
-                        author a2 ON au2.author_id = a2.scopus_id
-                    GROUP BY
-                        a1.scopus_id, a2.scopus_id
-                    """
+                        SELECT
+                            a1.scopus_id AS author1_id,
+                            a2.scopus_id AS author2_id,
+                            COUNT(DISTINCT au1.document_id) AS collaboration_count
+                        FROM
+                            authorship au1
+                        JOIN
+                            authorship au2 ON au1.document_id = au2.document_id AND au1.author_id < au2.author_id
+                        JOIN
+                            author a1 ON au1.author_id = a1.scopus_id
+                        JOIN
+                            author a2 ON au2.author_id = a2.scopus_id
+                        GROUP BY
+                            a1.scopus_id, a2.scopus_id
+                        """
                 )  # type: ignore
             )
 
@@ -368,9 +381,6 @@ class Transformer:
         )
 
     def transform(self):
-        self.process()
-        self.merge()
-        self.tidy()
-        self.clean()
-        self.drop_duplicates()
+        super().transform()
         self.format_neo4j_import()
+        self.add_neo4j_author_edges()

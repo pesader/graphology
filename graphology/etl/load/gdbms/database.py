@@ -11,4 +11,4 @@ USERNAME = GDBMS_NAME
 KEYRING_ENTRY = f"{PROJECT_NAME}-{GDBMS_NAME}"
 PASSWORD = keyring.get_password(KEYRING_ENTRY, USERNAME)
 
-driver = GraphDatabase.driver(DATABASE_URL, auth=(USERNAME, PASSWORD))
+driver = GraphDatabase.driver(DATABASE_URL, auth=(USERNAME, PASSWORD))  # type: ignore

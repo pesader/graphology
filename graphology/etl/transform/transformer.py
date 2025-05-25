@@ -254,8 +254,6 @@ class Transformer:
             )
 
     def format_neo4j_import(self):
-        import pandas as pd
-
         # Load cleaned authorships
         df_authorships = pd.read_csv(
             self.MERGED_DATA_DIRECTORY / "authorships.tsv",

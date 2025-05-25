@@ -27,6 +27,9 @@ def main():
     loader = RDBMSLoader(timestamp)
     loader.load()
 
+    # Create author-author edges (requires a populated RDBMS)
+    transformer.add_neo4j_author_edges()
+
     loader = GDBMSLoader(timestamp)
     loader.load()
 

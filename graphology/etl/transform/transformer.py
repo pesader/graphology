@@ -2,8 +2,10 @@ import pickle
 import logging
 import uuid
 
-import pandas as pd
 from pathlib import Path
+import pandas as pd
+from sqlalchemy import text
+from sqlmodel import Session
 
 from graphology.etl._helpers import (
     merged_data_directory,
@@ -11,6 +13,8 @@ from graphology.etl._helpers import (
     processed_data_directory,
     raw_data_directory,
 )
+
+from graphology.etl.load.rdbms.database import engine
 
 from graphology import log
 
@@ -324,6 +328,43 @@ class Transformer:
         )
         rel_df("id", "Institution").to_csv(
             self.NEO4J_DATA_DIRECTORY / "rel_authorship_institution.tsv",
+            sep="\t",
+            index=False,
+        )
+
+    def add_neo4j_author_edges(self):
+        with Session(engine) as session:
+            data = session.exec(
+                text(
+                    """
+                    SELECT
+                        a1.scopus_id AS author1_id,
+                        a2.scopus_id AS author2_id,
+                        COUNT(DISTINCT au1.document_id) AS collaboration_count
+                    FROM
+                        authorship au1
+                    JOIN
+                        authorship au2 ON au1.document_id = au2.document_id AND au1.author_id < au2.author_id
+                    JOIN
+                        author a1 ON au1.author_id = a1.scopus_id
+                    JOIN
+                        author a2 ON au2.author_id = a2.scopus_id
+                    GROUP BY
+                        a1.scopus_id, a2.scopus_id
+                    """
+                )  # type: ignore
+            )
+
+        df = pd.DataFrame(
+            data,
+            columns=[
+                ":START_ID(Author)",
+                ":END_ID(Author)",
+                "count:int",
+            ],  # type: ignore
+        )
+        df.to_csv(
+            self.NEO4J_DATA_DIRECTORY / "rel_author_author.tsv",
             sep="\t",
             index=False,
         )

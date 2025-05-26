@@ -25,6 +25,7 @@ class GDBMSLoader:
     def _run_neo4j_admin(self) -> None:
         """Runs a bash command and returns its output."""
         command = f"""
+        sudo neo4j stop &&
         sudo neo4j-admin database import full \
           --delimiter="\t" \
           --nodes=Author={self.NEO4J_DATA_DIRECTORY}/node_authors.tsv \
@@ -43,5 +44,60 @@ class GDBMSLoader:
         if result.returncode != 0:
             raise Exception("Unable to populate neo4j database")
 
+    def _create_indexes(self) -> None:
+        def create_author_indexes(tx):
+            statements = [
+                "CREATE INDEX range_author_scopus_id FOR (a:Author) ON (a.scopus_id)",
+                "CREATE INDEX range_author_name FOR (a:Author) ON (a.name)",
+            ]
+            for s in statements:
+                tx.run(s)
+
+        def create_document_indexes(tx):
+            statements = [
+                "CREATE INDEX range_document_scopus_id FOR (d:Document) ON (d.scopus_id)",
+                "CREATE INDEX range_document_doi FOR (d:Document) ON (d.doi)",
+                "CREATE INDEX range_document_title FOR (d:Document) ON (d.title)",
+            ]
+            for s in statements:
+                tx.run(s)
+
+        def create_institution_indexes(tx):
+            statements = [
+                "CREATE INDEX range_institution_scopus_id FOR (i:Institution) ON (i.scopus_id)",
+                "CREATE INDEX range_institution_name FOR (i:Institution) ON (i.name)",
+                "CREATE INDEX range_institution_city FOR (i:Institution) ON (i.city)",
+                "CREATE INDEX range_institution_country FOR (i:Institution) ON (i.country)",
+            ]
+            for s in statements:
+                tx.run(s)
+
+        def create_authorship_indexes(tx):
+            statements = [
+                "CREATE INDEX range_authorship_author_id FOR (auth:Authorship) ON (auth.author_id)",
+                "CREATE INDEX range_authorship_document_id FOR (auth:Authorship) ON (auth.document_id)",
+                "CREATE INDEX range_authorship_institution_id FOR (auth:Authorship) ON (auth.institution_id)",
+            ]
+            for s in statements:
+                tx.run(s)
+
+        # First, start the database
+        command = "sudo neo4j start"
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        if result.returncode != 0:
+            raise Exception("Unable to create neo4j indexes")
+
+        # Then, run the indexing commands
+        indexing_functions = [
+            create_author_indexes,
+            create_document_indexes,
+            create_institution_indexes,
+            create_authorship_indexes,
+        ]
+        with driver.session() as session:
+            for f in indexing_functions:
+                session.execute_write(f)
+
     def load(self):
         self._run_neo4j_admin()
+        self._create_indexes()

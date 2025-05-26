@@ -8,10 +8,10 @@ def main():
     DATA_DIRECTORY: Path = Path("data")
 
     START_YEAR = 2000
-    END_YEAR = 2000
+    END_YEAR = 2025
 
-    timestamp = now()
-    # timestamp = "2025-05-10T17-44-35"
+    # timestamp = now()
+    timestamp = "2025-05-10T17-44-35"
 
     pipeline = Pipeline(
         timestamp=timestamp,

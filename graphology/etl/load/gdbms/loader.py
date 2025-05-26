@@ -44,6 +44,12 @@ class GDBMSLoader:
         if result.returncode != 0:
             raise Exception("Unable to populate neo4j database")
 
+        log(
+            logging.INFO,
+            self.timestamp,
+            f"finished populating graph database",
+        )
+
     def _create_indexes(self) -> None:
         def create_author_indexes(tx):
             statements = [
@@ -53,6 +59,12 @@ class GDBMSLoader:
             for s in statements:
                 tx.run(s)
 
+            log(
+                logging.INFO,
+                self.timestamp,
+                f"finished creating indexes for Author nodes",
+            )
+
         def create_document_indexes(tx):
             statements = [
                 "CREATE INDEX range_document_scopus_id FOR (d:Document) ON (d.scopus_id)",
@@ -61,6 +73,12 @@ class GDBMSLoader:
             ]
             for s in statements:
                 tx.run(s)
+
+            log(
+                logging.INFO,
+                self.timestamp,
+                f"finished creating indexes for Document nodes",
+            )
 
         def create_institution_indexes(tx):
             statements = [
@@ -72,6 +90,12 @@ class GDBMSLoader:
             for s in statements:
                 tx.run(s)
 
+            log(
+                logging.INFO,
+                self.timestamp,
+                f"finished creating indexes for Intitution nodes",
+            )
+
         def create_authorship_indexes(tx):
             statements = [
                 "CREATE INDEX range_authorship_author_id FOR (auth:Authorship) ON (auth.author_id)",
@@ -80,6 +104,12 @@ class GDBMSLoader:
             ]
             for s in statements:
                 tx.run(s)
+
+            log(
+                logging.INFO,
+                self.timestamp,
+                f"finished creating indexes for Authorship nodes",
+            )
 
         # First, start the database
         command = "sudo neo4j start"
@@ -97,6 +127,12 @@ class GDBMSLoader:
         with driver.session() as session:
             for f in indexing_functions:
                 session.execute_write(f)
+
+        log(
+            logging.INFO,
+            self.timestamp,
+            f"finished creating all indexes",
+        )
 
     def load(self):
         self._run_neo4j_admin()

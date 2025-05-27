@@ -1,7 +1,7 @@
 from graphology.etl.load.gdbms.database import driver
 
 with driver.session() as session:
-    # 1. Project the graph
+    # 1. Create projection if it doesn't exist
     session.run(
         """
         CALL () {

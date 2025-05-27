@@ -10,7 +10,7 @@ def rename():
             WHERE n.community_louvain_7 IS NOT NULL
             SET n.best_community = n.community_louvain_7
             REMOVE n.community_louvain_7
-        """
+            """
         )
 
 

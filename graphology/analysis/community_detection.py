@@ -1,36 +1,31 @@
 from graphology.etl.load.gdbms.database import driver
 
 with driver.session() as session:
-    # 1. Drop graph if it exists
+    # 1. Project the graph
     session.run(
         """
-        CALL gds.graph.exists('authorGraph') YIELD exists 
-        WITH exists WHERE exists 
-        CALL gds.graph.drop('authorGraph') YIELD graphName 
-        RETURN graphName
+        CALL () {
+          WITH 'authorGraph' AS graphName
+          CALL gds.graph.exists(graphName) YIELD exists
+          WITH graphName, exists
+          WHERE NOT exists
+          CALL gds.graph.project(
+            graphName,
+            {
+              Author: { properties: ['community_labelprop'] }
+            },
+            {
+              COLLABORATED_WITH: { orientation: 'UNDIRECTED' }
+            }
+          )
+          YIELD graphName AS createdGraph
+          RETURN createdGraph
+        }
+        RETURN 'Projection step completed'
         """
     )
 
-    # 2. Project the graph
-    session.run(
-        """
-        CALL gds.graph.project(
-          'authorGraph',
-          {
-            Author: {
-              properties: ['community_labelprop']
-            }
-          },
-          {
-            COLLABORATED_WITH: {
-              orientation: 'UNDIRECTED'
-            }
-          }
-        )
-        """
-    )
-
-    # 3. Run label propagation
+    # 2. Run label propagation
     session.run(
         """
         CALL gds.labelPropagation.write(
@@ -42,7 +37,7 @@ with driver.session() as session:
         """
     )
 
-    # 4. Compute modularity
+    # 3. Compute modularity
     result = session.run(
         """
         CALL gds.modularity.stream('authorGraph', {
@@ -52,4 +47,5 @@ with driver.session() as session:
         RETURN sum(modularity) as totalModularity
         """
     )
+
     print("Modularity:", result.single()["totalModularity"])

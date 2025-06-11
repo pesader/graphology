@@ -40,18 +40,18 @@ def analyze():
         )
 
         algorithms = {
-            # "labelPropagation": {
-            #     "query": f"""
-            #         CALL gds.labelPropagation.write(
-            #             'authorGraph',
-            #             {{
-            #                 writeProperty: $label,
-            #                 relationshipWeightProperty: 'count'
-            #             }}
-            #         )
-            #         """,
-            #     "modularity_in_stats": False,
-            # },
+            "labelPropagation": {
+                "query": f"""
+                    CALL gds.labelPropagation.mutate(
+                        'authorGraph',
+                        {{
+                            mutateProperty: $label,
+                            relationshipWeightProperty: 'count'
+                        }}
+                    )
+                    """,
+                "modularity_in_stats": False,
+            },
             "louvain": {
                 "query": f"""
                     CALL gds.louvain.write(
@@ -104,7 +104,8 @@ def analyze():
                     result = session.run(
                         """
                         CALL gds.modularity.stream('authorGraph', {
-                          communityProperty: $label
+                          communityProperty: $label,
+                          relationshipWeightProperty: 'count'
                         })
                         YIELD modularity
                         RETURN sum(modularity) as totalModularity

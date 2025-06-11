@@ -1,67 +1,64 @@
 from graphology.etl.load.gdbms.database import driver
 
 
-def rename():
-    with driver.session() as session:
-        # 1. Create projection if it doesn't exist
-        session.run(
-            """
-            MATCH (n:Author)
-            WHERE n.community_louvain_7 IS NOT NULL
-            SET n.best_community = n.community_louvain_7
-            REMOVE n.community_louvain_7
-            """
-        )
-
-
 def _community_label(algorithm_name: str, iteration: int) -> str:
     return f"community_{algorithm_name}_{iteration}"
 
 
 def analyze():
     with driver.session() as session:
-        # 1. Create projection if it doesn't exist
+        # 1. Delete projection if it already exists
         session.run(
             """
-            CALL () {
-              WITH 'authorGraph' AS graphName
-              CALL gds.graph.exists(graphName) YIELD exists
-              WITH graphName, exists
-              WHERE NOT exists
-              CALL gds.graph.project(
-                graphName,
-                {
-                  Author: { properties: ['community_labelprop'] }
-                },
-                {
-                  COLLABORATED_WITH: { orientation: 'UNDIRECTED' }
-                }
-              )
-              YIELD graphName AS createdGraph
-              RETURN createdGraph
-            }
-            RETURN 'Projection step completed'
+            WITH 'authorGraph' AS graphName
+            CALL gds.graph.exists(graphName) YIELD exists
+            WITH graphName, exists
+            WHERE exists
+            CALL gds.graph.drop(graphName) YIELD graphName AS _
+            RETURN null
+            """
+        )
+
+        # 2. Create projection if it doesn't exist
+        session.run(
+            """
+            MATCH (a1:Author)-[r:COLLABORATED_WITH]->(a2:Author)
+            WHERE r.count >= 2
+            WITH a1, a2, r
+            RETURN gds.graph.project(
+              'authorGraph',
+              a1,
+              a2,
+              {
+                relationshipProperties: r { .count }
+              },
+              {
+                  undirectedRelationshipTypes: ['*']
+              }
+            )
             """
         )
 
         algorithms = {
-            "labelPropagation": {
-                "query": f"""
-                    CALL gds.labelPropagation.write(
-                        'authorGraph',
-                        {{
-                            writeProperty: $label
-                        }}
-                    )
-                    """,
-                "modularity_in_stats": False,
-            },
+            # "labelPropagation": {
+            #     "query": f"""
+            #         CALL gds.labelPropagation.write(
+            #             'authorGraph',
+            #             {{
+            #                 writeProperty: $label,
+            #                 relationshipWeightProperty: 'count'
+            #             }}
+            #         )
+            #         """,
+            #     "modularity_in_stats": False,
+            # },
             "louvain": {
                 "query": f"""
                     CALL gds.louvain.write(
                         'authorGraph',
                         {{
-                            writeProperty: $label
+                            writeProperty: $label,
+                            relationshipWeightProperty: 'count'
                         }}
                     ) YIELD modularity as totalModularity
                     """,
@@ -72,7 +69,8 @@ def analyze():
                     CALL gds.leiden.write(
                         'authorGraph',
                         {{
-                            writeProperty: $label
+                            writeProperty: $label,
+                            relationshipWeightProperty: 'count'
                         }}
                     ) YIELD modularity as totalModularity
                     """,
@@ -80,18 +78,18 @@ def analyze():
             },
         }
 
-        # 2. Run label propagation
+        # 3. Run community detection algorithms
         for name, props in algorithms.items():
 
-            # Only repeat stochastic algorithms
+            # Repeat stochastic algorithms
             times: int
             match (name):
                 case "labelPropagation":
-                    times = 10
+                    times = 1
                 case "louvain":
-                    times = 10
+                    times = 1
                 case "leiden":
-                    times = 25
+                    times = 1
                 case _:
                     times = 1
 
@@ -102,15 +100,16 @@ def analyze():
                 )
 
                 if not props["modularity_in_stats"]:
-                    # 3. Compute modularity
+                    # 4. Compute modularity
                     result = session.run(
                         """
                         CALL gds.modularity.stream('authorGraph', {
-                          communityProperty: 'community_labelprop'
+                          communityProperty: $label
                         })
                         YIELD modularity
                         RETURN sum(modularity) as totalModularity
-                        """
+                        """,
+                        label=_community_label(name, i),
                     )
 
                 print(

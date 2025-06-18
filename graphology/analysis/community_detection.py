@@ -85,18 +85,8 @@ def analyze():
         for name, props in algorithms.items():
 
             # Repeat stochastic algorithms
-            times: int
-            match (name):
-                case "labelPropagation":
-                    times = 1
-                case "louvain":
-                    times = 1
-                case "leiden":
-                    times = 1
-                case _:
-                    times = 1
-
-            for i in range(1, times + 1):
+            TIMES: int = 10
+            for i in range(1, TIMES + 1):
                 label = _community_label(name, i)
 
                 result = session.run(

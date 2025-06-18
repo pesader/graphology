@@ -26,7 +26,7 @@ logger.addHandler(file_handler)
 logger.addHandler(stream_handler)
 
 
-def log(level: int, timestamp: str, message: object):
+def log(message: object, timestamp: str | None = None, level: int = logging.INFO):
     logger.log(
         level,
         f"timestamp:{timestamp} - {message}",

@@ -53,24 +53,21 @@ class Extractor:
                 with open(self.RAW_DATA_DIRECTORY / f"results_{year}.pkl", "wb") as f:
                     pickle.dump(results, f)
             log(
-                logging.INFO,
-                self.timestamp,
                 f"finished extracting data from {year}",
+                self.timestamp,
             )
 
         log(
-            logging.INFO,
-            self.timestamp,
             f"finished extracting data from all requested years",
+            self.timestamp,
         )
 
     def extract(self):
         # Do nothing if data has already been extracted
         if not is_empty(self.RAW_DATA_DIRECTORY):
             log(
-                logging.INFO,
-                self.timestamp,
                 "Skipped data extraction, because data has already been extracted.",
+                self.timestamp,
             )
             return
 

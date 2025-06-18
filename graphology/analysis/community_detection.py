@@ -43,13 +43,13 @@ def analyze():
 
         algorithms = {
             "labelPropagation": {
-                "query": f"""
+                "query": """
                     CALL gds.labelPropagation.mutate(
                         'authorGraph',
-                        {{
+                        {
                             mutateProperty: $label,
                             relationshipWeightProperty: 'count'
-                        }}
+                        }
                     )
                     """,
                 "modularity_in_stats": False,
@@ -112,8 +112,6 @@ def analyze():
                 label_to_modularity[label] = modularity
 
                 log(
-                    logging.INFO,
-                    None,
                     f"{name} modularity (iteration {i}): {modularity}",
                 )
 

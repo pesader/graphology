@@ -45,9 +45,8 @@ class GDBMSLoader:
             raise Exception("Unable to populate neo4j database")
 
         log(
-            logging.INFO,
-            self.timestamp,
             f"finished populating graph database",
+            self.timestamp,
         )
 
     def _create_indexes(self) -> None:
@@ -60,9 +59,8 @@ class GDBMSLoader:
                 tx.run(s)
 
             log(
-                logging.INFO,
-                self.timestamp,
                 f"finished creating indexes for Author nodes",
+                self.timestamp,
             )
 
         def create_document_indexes(tx):
@@ -75,9 +73,8 @@ class GDBMSLoader:
                 tx.run(s)
 
             log(
-                logging.INFO,
-                self.timestamp,
                 f"finished creating indexes for Document nodes",
+                self.timestamp,
             )
 
         def create_institution_indexes(tx):
@@ -91,9 +88,8 @@ class GDBMSLoader:
                 tx.run(s)
 
             log(
-                logging.INFO,
-                self.timestamp,
                 f"finished creating indexes for Intitution nodes",
+                self.timestamp,
             )
 
         def create_authorship_indexes(tx):
@@ -106,9 +102,8 @@ class GDBMSLoader:
                 tx.run(s)
 
             log(
-                logging.INFO,
-                self.timestamp,
                 f"finished creating indexes for Authorship nodes",
+                self.timestamp,
             )
 
         # First, start the database
@@ -129,9 +124,8 @@ class GDBMSLoader:
                 session.execute_write(f)
 
         log(
-            logging.INFO,
-            self.timestamp,
             f"finished creating all indexes",
+            self.timestamp,
         )
 
     def load(self):

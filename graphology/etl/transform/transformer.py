@@ -216,19 +216,16 @@ class Transformer:
             5,  # Round to five decimal places
         )
         log(
-            logging.INFO,
-            self.timestamp,
             f"number of authorships before cleaning: {n_authorships}",
+            self.timestamp,
         )
         log(
-            logging.INFO,
-            self.timestamp,
             f"number of authorships after cleaning: {n_filtered_authorships}",
+            self.timestamp,
         )
         log(
-            logging.INFO,
-            self.timestamp,
             f"percentage of authorships removed: {removed_authorships_percentage}%",
+            self.timestamp,
         )
 
         df_filtered_authorships.to_csv(
@@ -262,9 +259,8 @@ class Transformer:
         # Do nothing if data has already been processed
         if not is_empty(self.PROCESSED_DATA_DIRECTORY):
             log(
-                logging.INFO,
-                self.timestamp,
                 "Skipped data processing, because data has already been processed.",
+                self.timestamp,
             )
             return
 
@@ -273,9 +269,8 @@ class Transformer:
         # Do nothing more if data has already been merged
         if not is_empty(self.MERGED_DATA_DIRECTORY):
             log(
-                logging.INFO,
-                self.timestamp,
                 "Skipped data merging, because data has already been merged.",
+                self.timestamp,
             )
             return
 
@@ -424,9 +419,8 @@ class GDBMSTransformer(Transformer):
         # Do nothing if data has already been formatted for neo4j import
         if not is_empty(self.NEO4J_DATA_DIRECTORY):
             log(
-                logging.INFO,
-                self.timestamp,
                 "Skipped data formatting for neo4j, because that has already been done.",
+                self.timestamp,
             )
             return
 

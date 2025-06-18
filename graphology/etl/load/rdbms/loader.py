@@ -54,9 +54,8 @@ class RDBMSLoader:
         self._batch_insert(Institution, mappings)
 
         log(
-            logging.INFO,
-            self.timestamp,
             f"finished populating institutions table",
+            self.timestamp,
         )
 
     def _populate_authors(self):
@@ -70,9 +69,8 @@ class RDBMSLoader:
         self._batch_insert(Author, mappings)
 
         log(
-            logging.INFO,
-            self.timestamp,
             f"finished populating authors table",
+            self.timestamp,
         )
 
     def _populate_documents(self):
@@ -86,9 +84,8 @@ class RDBMSLoader:
         self._batch_insert(Document, mappings)
 
         log(
-            logging.INFO,
-            self.timestamp,
             f"finished populating documents table",
+            self.timestamp,
         )
 
     def _populate_authorships(self):
@@ -104,9 +101,8 @@ class RDBMSLoader:
         self._batch_insert(Authorship, mappings)
 
         log(
-            logging.INFO,
-            self.timestamp,
             f"finished populating authorships table",
+            self.timestamp,
         )
 
     def load(self):

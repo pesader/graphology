@@ -1,4 +1,6 @@
 from graphology.etl.load.gdbms.database import driver
+from graphology import log
+import logging
 
 
 def _community_label(algorithm_name: str, iteration: int) -> str:
@@ -54,10 +56,10 @@ def analyze():
             },
             "louvain": {
                 "query": f"""
-                    CALL gds.louvain.write(
+                    CALL gds.louvain.mutate(
                         'authorGraph',
                         {{
-                            writeProperty: $label,
+                            mutateProperty: $label,
                             relationshipWeightProperty: 'count'
                         }}
                     ) YIELD modularity as totalModularity
@@ -66,10 +68,10 @@ def analyze():
             },
             "leiden": {
                 "query": f"""
-                    CALL gds.leiden.write(
+                    CALL gds.leiden.mutate(
                         'authorGraph',
                         {{
-                            writeProperty: $label,
+                            mutateProperty: $label,
                             relationshipWeightProperty: 'count'
                         }}
                     ) YIELD modularity as totalModularity
@@ -79,6 +81,7 @@ def analyze():
         }
 
         # 3. Run community detection algorithms
+        label_to_modularity: dict[str, float] = {}
         for name, props in algorithms.items():
 
             # Repeat stochastic algorithms
@@ -94,9 +97,11 @@ def analyze():
                     times = 1
 
             for i in range(1, times + 1):
+                label = _community_label(name, i)
+
                 result = session.run(
                     props["query"],
-                    label=_community_label(name, i),
+                    label=label,
                 )
 
                 if not props["modularity_in_stats"]:
@@ -110,13 +115,29 @@ def analyze():
                         YIELD modularity
                         RETURN sum(modularity) as totalModularity
                         """,
-                        label=_community_label(name, i),
+                        label=label,
                     )
 
-                print(
-                    f"{name} modularity (iteration {i}):",
-                    result.single()["totalModularity"],
+                modularity = result.single()["totalModularity"]  # type:ignore
+                label_to_modularity[label] = modularity
+
+                log(
+                    logging.INFO,
+                    None,
+                    f"{name} modularity (iteration {i}): {modularity}",
                 )
+
+        best = max(label_to_modularity, key=label_to_modularity.get)  # type:ignore
+        session.run(
+            f"""
+            CALL gds.graph.nodeProperties.write('authorGraph', [
+                {{
+                    {best}: "community"
+                }}
+            ])
+            YIELD nodeProperties
+            """,  # type:ignore
+        )
 
 
 if __name__ == "__main__":

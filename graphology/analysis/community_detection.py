@@ -116,6 +116,9 @@ def analyze():
                 )
 
         best = max(label_to_modularity, key=label_to_modularity.get)  # type:ignore
+
+        log(f"best was {best} with modularity {label_to_modularity[best]}")
+
         session.run(
             f"""
             CALL gds.graph.nodeProperties.write('authorGraph', [

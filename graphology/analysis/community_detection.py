@@ -55,25 +55,25 @@ def analyze():
                 "modularity_in_stats": False,
             },
             "louvain": {
-                "query": f"""
+                "query": """
                     CALL gds.louvain.mutate(
                         'authorGraph',
-                        {{
+                        {
                             mutateProperty: $label,
                             relationshipWeightProperty: 'count'
-                        }}
+                        }
                     ) YIELD modularity as totalModularity
                     """,
                 "modularity_in_stats": True,
             },
             "leiden": {
-                "query": f"""
+                "query": """
                     CALL gds.leiden.mutate(
                         'authorGraph',
-                        {{
+                        {
                             mutateProperty: $label,
                             relationshipWeightProperty: 'count'
-                        }}
+                        }
                     ) YIELD modularity as totalModularity
                     """,
                 "modularity_in_stats": True,

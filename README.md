@@ -1,17 +1,11 @@
 ![A banner, showing the project's logo, as well authors and institutions](assets/banner.png)
 
-# `graphology`
-
-An analysis of scientific collaboration networks at Unicamp using graphs.
-
-> [!IMPORTANT]
-> `graphology` will be featured in a presentation at NODES 2025, Neo4j's annual
-> conference.
-> <img src="assets/nodes2025.jpeg" width="400">
-
-
 ## Good news!
 
+`graphology` will be featured in a presentation at NODES 2025, Neo4j's annual
+conference.
+
+<img src="assets/nodes2025.jpeg" width="400">
 
 ## Report Summary
 

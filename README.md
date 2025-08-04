@@ -1,10 +1,33 @@
+![A banner, showing the project's logo, as well authors and institutions](assets/banner.png)
+
 # `graphology`
 
-An analysis of scientific collaboration at Unicamp using graphs.
+An analysis of scientific collaboration networks at Unicamp using graphs.
 
-## Relational Database
+> [!IMPORTANT]
+> `graphology` will be featured in a presentation at NODES 2025, Neo4j's annual
+> conference.
+> <img src="assets/nodes2025.jpeg" width="400">
 
-### Setup
+
+## Good news!
+
+
+## Report Summary
+
+### Introduction
+
+### Methods
+
+### Implementation
+
+### Results
+
+## Running
+
+### Relational Database
+
+#### Setup
 
 Set your password with
 
@@ -42,9 +65,9 @@ flatpak-spawn --host podman run -d \
   postgres:latest
 ```
 
-## Graph Database
+### Graph Database
 
-### Setup
+#### Setup
 
 These instructions are for Fedora Workstation, and based on the official
 installation instructions laid out
@@ -88,7 +111,7 @@ sudo neo4j-admin dbms set-initial-password $YOUR_PASSWORD
 sudo neo4j start
 ```
 
-### Moving data to Neo4j's import directory
+#### Moving data to Neo4j's import directory
 
 Neo4j requires files to be placed in a certain directory to import data from
 them. For convenience, there's a small shell script that does that in
@@ -100,7 +123,7 @@ sudo ./scripts/cptsv.sh $TIMESTAMP
 
 Where `$TIMESTAMP` is timestamp string, like "2025-05-10T17-44-35".
 
-### Resetting the `neo4j` database
+#### Resetting the `neo4j` database
 
 To reset the database (clear all data in it), run:
 
@@ -108,3 +131,11 @@ To reset the database (clear all data in it), run:
 sudo ./scripts/rmdb.sh
 ```
 
+## Additional Resources
+
+- Full report (Brazilian Portuguese)
+- Poster (Brazilian Portuguese)
+
+## License
+
+This work is licensed under the terms of the GPLv3.
